@@ -110,13 +110,16 @@ public class MainActivity extends AppCompatActivity {
 
         } else if ("MOP".equals(userType)) {
             appBarConfiguration = new AppBarConfiguration.Builder(
-                    R.id.navigation_home,
+                    R.id.navigation_home_mop,
                     R.id.navigation_dashboard,
                     R.id.maintenanceFragment
             ).build();
+            NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_activity_main);
 
+            navView.getMenu().findItem(R.id.navigation_home).setVisible(false);
             navView.getMenu().findItem(R.id.navigation_homerh).setVisible(false);
             navView.getMenu().findItem(R.id.navigation_calendar).setVisible(false);
+            navController.navigate(R.id.navigation_homerh);
 
         } else if ("RH".equals(userType)) {
             appBarConfiguration = new AppBarConfiguration.Builder(
@@ -124,9 +127,9 @@ public class MainActivity extends AppCompatActivity {
                     R.id.navigation_dashboard,
                     R.id.navigation_homerh
             ).build();
-
             NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_activity_main);
 
+            navView.getMenu().findItem(R.id.navigation_home_mop).setVisible(false);
             navView.getMenu().findItem(R.id.navigation_home).setVisible(false);
             navController.navigate(R.id.navigation_homerh);
 

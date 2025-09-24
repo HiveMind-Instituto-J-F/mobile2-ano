@@ -102,39 +102,6 @@
         app:layout_constraintTop_toBottomOf="@+id/textInputLayoutPassword"
         app:layout_constraintVertical_bias="0.0" />
 
-    <TextView
-        android:id="@+id/txtCadastro"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginEnd="92dp"
-        android:fontFamily="@font/lexend_deca_medium"
-        android:text="Cadastre-se"
-        android:textColor="#5F33E1"
-        android:textSize="10sp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toEndOf="@+id/textView6"
-        app:layout_constraintTop_toBottomOf="@+id/btnGoogleSignIn" />
-
-    <TextView
-        android:id="@+id/textView6"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="100dp"
-        android:layout_marginEnd="8dp"
-        android:fontFamily="@font/lexend_deca_medium"
-        android:text="Não tem uma conta?"
-        android:textColor="#646464"
-        android:textSize="10sp"
-
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/txtCadastro"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/btnGoogleSignIn" />
-
     <Button
         android:id="@+id/btnEntrar"
         android:layout_width="360dp"

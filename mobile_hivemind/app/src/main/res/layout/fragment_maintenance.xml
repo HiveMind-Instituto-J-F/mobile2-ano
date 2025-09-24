@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/background_light"
-    tools:context=".ui.home.paradas.MaintenanceFragment">
+    tools:context=".ui.paradas.MaintenanceFragment">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -79,6 +79,25 @@
                 android:textColor="#757575"
                 android:textSize="14sp" />
 
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:fontFamily="@font/poppins"
+                android:text="Código de identificação do colaborador"
+                android:textColor="#212121"
+                android:textSize="16sp" />
+
+            <TextView
+                android:id="@+id/editCodigoColaborador"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:hint="Código do colaborador"
+                android:paddingBottom="8dp"
+                android:textColor="#212121"
+                android:textColorHint="#9E9E9E" />
+
             <!-- Nome da máquina -->
             <TextView
                 android:layout_width="wrap_content"
@@ -91,27 +110,6 @@
 
             <EditText
                 android:id="@+id/editNomeMaquina"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                android:background="@drawable/bottom_line_drawable"
-                android:hint="Escreva aqui"
-                android:inputType="text"
-                android:paddingBottom="8dp"
-                android:textColor="#212121"
-                android:textColorHint="#9E9E9E" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:fontFamily="@font/poppins"
-                android:text="Id do funcionario"
-                android:textColor="#212121"
-                android:textSize="16sp" />
-
-            <EditText
-                android:id="@+id/editIdFunc"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
@@ -164,7 +162,7 @@
                 app:boxCornerRadiusBottomStart="16dp"
                 app:boxCornerRadiusTopEnd="16dp"
                 app:boxCornerRadiusTopStart="16dp"
-                app:boxStrokeColor="#6B3EFF"
+                app:boxStrokeColor="#274855"
                 app:endIconDrawable="@drawable/ic_dropdown"
                 app:startIconDrawable="@drawable/calendar">
 
@@ -176,6 +174,37 @@
                     android:inputType="none"
                     android:textColor="#000000" />
             </com.google.android.material.textfield.TextInputLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:fontFamily="@font/poppins"
+                android:text="Imagem do máquinario"
+                android:textColor="#212121"
+                android:textSize="16sp" />
+
+            <LinearLayout
+                android:id="@+id/layoutImagemUpload"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:background="@drawable/borda_anexo"
+                android:orientation="vertical"
+                android:padding="12dp">
+
+                <TextView
+                    android:id="@+id/btnAnexarImagem"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:drawableStart="@drawable/ic_clipn"
+                    android:drawablePadding="8dp"
+                    android:fontFamily="@font/lexend_deca"
+                    android:gravity="center_vertical"
+                    android:paddingVertical="8dp"
+                    android:text="Clique para ver o anexo"
+                    android:textSize="14sp" />
+            </LinearLayout>
+
 
             <!-- Relatório -->
             <TextView
@@ -191,7 +220,6 @@
                 android:id="@+id/editRelatorio"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
                 android:background="@drawable/bottom_line_drawable"
                 android:hint="Digite aqui"
                 android:inputType="textMultiLine"
@@ -207,10 +235,10 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
-            android:layout_marginTop="32dp"
+            android:layout_marginTop="12dp"
             android:layout_marginEnd="16dp"
             android:layout_marginBottom="16dp"
-            android:backgroundTint="#735BF2"
+            android:backgroundTint="#E89640"
             android:paddingTop="16dp"
             android:paddingBottom="16dp"
             android:text="CONCLUIR RELATÓRIO"

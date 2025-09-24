@@ -14,7 +14,7 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.aula.mobile_hivemind.databinding.FragmentCalendarBinding;
-import com.aula.mobile_hivemind.recyclerViewParadas.ParadaCalendarAdapter;
+import com.aula.mobile_hivemind.recyclerViewParadas.adapter.ParadaCalendarAdapter;
 import com.aula.mobile_hivemind.recyclerViewParadas.ParadaModel;
 import com.prolificinteractive.materialcalendarview.CalendarDay;
 import com.prolificinteractive.materialcalendarview.DayViewDecorator;

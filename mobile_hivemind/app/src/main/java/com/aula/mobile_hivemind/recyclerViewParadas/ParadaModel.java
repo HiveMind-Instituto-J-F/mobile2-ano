@@ -10,6 +10,7 @@ public class ParadaModel {
     private String hora;
     private Calendar data;
     private String descricao;
+    private Integer idManutencao;
 
     public ParadaModel(String nome, String setor, String hora, Calendar data, String descricao) {
         this.nome = nome;
@@ -49,6 +50,10 @@ public class ParadaModel {
         return descricao;
     }
 
+    public Integer getIdManutencao() {
+        return idManutencao;
+    }
+
     // Setters opcionais
     public void setSetor(String setor) {
         this.setor = setor;
@@ -64,5 +69,9 @@ public class ParadaModel {
 
     public void setDescricao(String descricao) {
         this.descricao = descricao;
+    }
+
+    public void setIdManutencao(Integer idManutencao) {
+        this.idManutencao = idManutencao;
     }
 }

@@ -62,6 +62,9 @@ dependencies {
     // Para rodar testes JUnit 4 e 5 juntos
     testRuntimeOnly("org.junit.vintage:junit-vintage-engine:5.11.0-M1") // Versão mais recente
 
+    androidTestImplementation("org.junit.jupiter:junit-jupiter-api:5.8.2")
+    androidTestRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.8.2")
+
     testImplementation(libs.junit) // Mantém a dependência do JUnit 4 para compatibilidade
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)

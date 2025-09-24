@@ -67,12 +67,5 @@ public class LoginActivity extends AppCompatActivity {
             });
         });
 
-        TextView btnCadastrar = findViewById(R.id.txtCadastro);
-        btnCadastrar.setOnClickListener(v -> {
-            Intent intent = new Intent(LoginActivity.this, CadastroActivity.class);
-            startActivity(intent);
-            finish();
-        });
-
     }
 }

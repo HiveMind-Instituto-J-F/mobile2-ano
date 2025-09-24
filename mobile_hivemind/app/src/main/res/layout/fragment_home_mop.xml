@@ -4,13 +4,14 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.home.HomeFragment"
+    tools:context=".ui.home_mop.Home_mopFragment"
     android:background="@drawable/background_2">
 
     <ImageView
         android:id="@+id/imageView3"
         android:layout_width="60dp"
         android:layout_height="60dp"
+        android:layout_marginStart="18dp"
         android:layout_marginTop="38dp"
         android:src="@drawable/icon"
         app:layout_constraintBottom_toTopOf="@+id/searchCard"
@@ -45,20 +46,21 @@
         android:id="@+id/filterButton"
         android:layout_width="52dp"
         android:layout_height="52dp"
-        android:layout_marginEnd="18dp"
+        android:backgroundTint="#7A3DFF"
         android:background="@drawable/bg_filter_button"
-        android:backgroundTint="#E89640"
-        android:contentDescription="Filtrar"
         android:src="@drawable/ic_filter"
+        android:contentDescription="Filtrar"
+        app:layout_constraintTop_toTopOf="@id/searchCard"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@id/searchCard" />
+        android:layout_marginEnd="18dp" />
 
     <TextView
         android:id="@+id/textView10"
         android:layout_width="wrap_content"
         android:layout_height="24dp"
+        android:layout_marginStart="26dp"
         android:layout_marginTop="44dp"
-        android:layout_marginEnd="920dp"
+        android:layout_marginEnd="269dp"
         android:fontFamily="@font/lexend_deca_semibold"
         android:text="Olá,"
         android:textColor="#FFFFFF"
@@ -72,6 +74,7 @@
         android:id="@+id/txtNomeIndustria"
         android:layout_width="wrap_content"
         android:layout_height="24dp"
+        android:layout_marginStart="26dp"
         android:layout_marginTop="6dp"
         android:layout_marginEnd="112dp"
         android:layout_marginBottom="24dp"
@@ -81,7 +84,6 @@
         android:textSize="19sp"
         app:layout_constraintBottom_toTopOf="@+id/searchCard"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.106"
         app:layout_constraintStart_toEndOf="@+id/imageView3"
         app:layout_constraintTop_toBottomOf="@+id/textView10" />
 
@@ -133,7 +135,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/searchCard"
         app:layout_constraintVertical_bias="1.0"
-        tools:listitem="@layout/parada_item_recycleview_principal" />
+        tools:listitem="@layout/parada_item_recycleview_mop" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,4 +1,4 @@
-package com.aula.mobile_hivemind.recyclerViewParadas;
+package com.aula.mobile_hivemind.recyclerViewParadas.adapter;
 
 import android.app.AlertDialog;
 import android.content.Context;
@@ -11,6 +11,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.aula.mobile_hivemind.R;
+import com.aula.mobile_hivemind.recyclerViewParadas.ParadaModel;
 
 import java.text.SimpleDateFormat;
 import java.util.List;

@@ -13,7 +13,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.aula.mobile_hivemind.R;
-import com.aula.mobile_hivemind.recyclerViewParadas.ParadaAdapter;
+import com.aula.mobile_hivemind.recyclerViewParadas.adapter.ParadaAdapter;
 import com.aula.mobile_hivemind.recyclerViewParadas.ParadaModel;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
@@ -57,6 +57,7 @@ public class HomeFragment extends Fragment {
                 uniqueSectors.add(parada.getSetor());
             }
         }
+
         List<String> sectorsList = new ArrayList<>(uniqueSectors);
 
         Collections.sort(sectorsList);

@@ -4,8 +4,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/background"
-    tools:context=".ui.home.paradas.ConfirmationFragment" >
+    android:background="@drawable/background_2"
+    tools:context=".ui.paradas.ConfirmationFragment">
 
 
     <ImageView
@@ -58,7 +58,7 @@
         android:layout_height="64dp"
         android:layout_marginTop="124dp"
         android:layout_marginBottom="200dp"
-        android:backgroundTint="#5F33E1"
+        android:backgroundTint="#E89640"
         android:text="Retornar a tela inicial"
         android:textColor="#FFFFFF"
         app:cornerRadius="8dp"
