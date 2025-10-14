@@ -1,3 +1,0 @@
-### GET request to example server
-DELETE http://localhost:8080/api/produtos/deletar/
-###
