@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/mobile_navigation"
+    app:startDestination="@id/navigation_home">
+
+    <fragment
+        android:id="@+id/navigation_home"
+        android:name="com.aula.mobile_hivemind.ui.home.HomeFragment"
+        android:label="@string/title_home"
+        tools:layout="@layout/fragment_home" />
+
+    <fragment
+        android:id="@+id/navigation_calendar"
+        android:name="com.aula.mobile_hivemind.ui.dashboard.DashboardFragment"
+        android:label="navigation_calendar"
+        tools:layout="@layout/fragment_calendar" />
+
+    <fragment
+        android:id="@+id/navigation_dashboard"
+        android:name="com.aula.mobile_hivemind.ui.calendar.CalendarFragment"
+        android:label="navigation_dashboard"
+        tools:layout="@layout/fragment_dashboard" />
+    <activity
+        android:id="@+id/splashScreenActivity"
+        android:name="com.aula.mobile_hivemind.SplashScreenActivity"
+        android:label="activity_splash_screen"
+        tools:layout="@layout/activity_splash_screen" />
+    <fragment
+        android:id="@+id/confirmationFragment"
+        android:name="com.aula.mobile_hivemind.ui.home.paradas.ConfirmationFragment"
+        android:label="fragment_confirmation"
+        tools:layout="@layout/fragment_confirmation" />
+    <fragment
+        android:id="@+id/maintenanceFragment"
+        android:name="com.aula.mobile_hivemind.ui.home.paradas.MaintenanceFragment"
+        android:label="fragment_maintenance"
+        tools:layout="@layout/fragment_maintenance" />
+    <fragment
+        android:id="@+id/addParadaFragment"
+        android:name="com.aula.mobile_hivemind.ui.home.paradas.AddParadaFragment"
+        android:label="AddParadaFragment"
+        tools:layout="@layout/fragment_add_parada"/>
+    <fragment
+        android:id="@+id/navigation_homerh"
+        android:name="com.aula.mobile_hivemind.ui.home_rh.HomeRhFragment"
+        android:label="navigation_homerh"
+        tools:layout="@layout/fragment_home_rh" />
+    <fragment
+        android:id="@+id/navigation_logout"
+        android:name="com.aula.mobile_hivemind.auth.LogoutFragment"
+        android:label="Sair"
+        tools:layout="@layout/fragment_logout" />
+</navigation>

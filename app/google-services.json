@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "57492015513",
+    "project_id": "loginapphivemind",
+    "storage_bucket": "loginapphivemind.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:57492015513:android:9998d9de6c5634e43eab08",
+        "android_client_info": {
+          "package_name": "com.aula.mobile_hivemind"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAjzMgOUfFojhORe09pZtziEt5yVPbmTnk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
