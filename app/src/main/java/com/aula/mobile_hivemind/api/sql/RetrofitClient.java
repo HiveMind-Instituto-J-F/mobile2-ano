@@ -1,4 +1,6 @@
-package com.aula.mobile_hivemind.api;
+package com.aula.mobile_hivemind.api.sql;
+
+import com.aula.mobile_hivemind.api.mongo.ApiServiceMongo;
 
 import java.util.concurrent.TimeUnit;
 
@@ -10,11 +12,11 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class RetrofitClient {
 //    private static final String BASE_URL = "http://192.168.1.100:27100/";
 
-//    private static final String BASE_URL = "http://10.0.2.2:27100/";
-    private static final String BASE_URL = "https://api-mongo-kmyg.onrender.com";
+    //    private static final String BASE_URL = "http://10.0.2.2:27100/";
+    private static final String BASE_URL = "https://api-2-0mqv.onrender.com";
     private static Retrofit retrofit = null;
 
-    public static ApiService getApiService() {
+    public static ApiServiceMongo getApiService() {
         if (retrofit == null) {
             HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
             logging.setLevel(HttpLoggingInterceptor.Level.BODY);
@@ -33,6 +35,6 @@ public class RetrofitClient {
                     .addConverterFactory(GsonConverterFactory.create())
                     .build();
         }
-        return retrofit.create(ApiService.class);
+        return retrofit.create(ApiServiceMongo.class);
     }
 }

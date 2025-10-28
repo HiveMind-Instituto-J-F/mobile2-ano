@@ -1,7 +1,5 @@
 package com.aula.mobile_hivemind.ui.home;
 
-import android.app.AlertDialog;
-import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
@@ -20,8 +18,11 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.aula.mobile_hivemind.MainActivity;
 import com.aula.mobile_hivemind.R;
-import com.aula.mobile_hivemind.api.RetrofitClient;
-import com.aula.mobile_hivemind.dto.RegistroParadaResponseDTO;
+import com.aula.mobile_hivemind.api.mongo.RetrofitClient;
+import com.aula.mobile_hivemind.api.mongo.ApiServiceMongo;
+import com.aula.mobile_hivemind.api.sql.ApiServiceSQL;
+import com.aula.mobile_hivemind.dto.mongo.RegistroParadaResponseDTO;
+import com.aula.mobile_hivemind.dto.sql.RegistroParadaRequestDTO;
 import com.aula.mobile_hivemind.recyclerViewParadas.Parada;
 import com.aula.mobile_hivemind.recyclerViewParadas.ParadaAdapter;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
@@ -48,13 +49,14 @@ public class HomeFragment extends Fragment {
 
     private List<Parada> paradasList;
     private List<Parada> allParadasList;
-    private com.aula.mobile_hivemind.api.ApiService apiService;
-
+    private ApiServiceMongo apiServiceMongo;
+    private ApiServiceSQL apiServiceSQL;
     private FirebaseFirestore db;
     private SharedPreferences sharedPreferences;
     private String userEmail;
     private String userType;
     private String userSetor;
+    private RegistroMapper registroMapper;
 
     @Nullable
     @Override
@@ -72,7 +74,7 @@ public class HomeFragment extends Fragment {
         recyclerViewParadas = view.findViewById(R.id.recyclerViewParadas);
 
         // Inicializar API Service
-        apiService = RetrofitClient.getApiService();
+        apiServiceMongo = RetrofitClient.getApiService();
 
         // Inicializar Firestore e SharedPreferences
         db = FirebaseFirestore.getInstance();
@@ -210,7 +212,7 @@ public class HomeFragment extends Fragment {
     }
 
     private void carregarParadas() {
-        Call<List<RegistroParadaResponseDTO>> call = apiService.getAllRegistros();
+        Call<List<RegistroParadaResponseDTO>> call = apiServiceMongo.getAllRegistros();
         call.enqueue(new Callback<List<RegistroParadaResponseDTO>>() {
             @Override
             public void onResponse(Call<List<RegistroParadaResponseDTO>> call, Response<List<RegistroParadaResponseDTO>> response) {
@@ -361,5 +363,11 @@ public class HomeFragment extends Fragment {
             }
         }
         return filteredList;
+    }
+
+    public void mesclarApi(String id){
+        RegistroParadaResponseDTO callMongo = apiServiceMongo.getRegistroById(id);
+        RegistroParadaRequestDTO convert = registroMapper.toRegistroParadaRequestDTO(callMongo);
+        apiServiceSQL.criarRegistro(convert);
     }
 }

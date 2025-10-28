@@ -1,7 +1,7 @@
-package com.aula.mobile_hivemind.api;
+package com.aula.mobile_hivemind.api.mongo;
 
-import com.aula.mobile_hivemind.dto.RegistroParadaRequestDTO;
-import com.aula.mobile_hivemind.dto.RegistroParadaResponseDTO;
+import com.aula.mobile_hivemind.dto.mongo.RegistroParadaRequestDTO;
+import com.aula.mobile_hivemind.dto.mongo.RegistroParadaResponseDTO;
 
 import java.util.List;
 
@@ -14,9 +14,12 @@ import retrofit2.http.POST;
 import retrofit2.http.PUT;
 import retrofit2.http.Path;
 
-public interface ApiService {
+public interface ApiServiceMongo {
     @GET("api-mongo/selecionar")
     Call<List<RegistroParadaResponseDTO>> getAllRegistros();
+
+    @GET("api-mongo/buscar/{id}")
+    RegistroParadaResponseDTO getRegistroById(@Path("id") String id);
 
     @POST("api-mongo/inserir")
     Call<okhttp3.ResponseBody> criarRegistro(@Body RegistroParadaRequestDTO requestDTO);
