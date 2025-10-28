@@ -21,14 +21,14 @@ import androidx.navigation.fragment.NavHostFragment;
 
 import com.aula.mobile_hivemind.MainActivity;
 import com.aula.mobile_hivemind.R;
-import com.aula.mobile_hivemind.api.RetrofitClient;
-import com.aula.mobile_hivemind.dto.RegistroParadaRequestDTO;
+import com.aula.mobile_hivemind.api.mongo.RetrofitClient;
+import com.aula.mobile_hivemind.api.mongo.ApiServiceMongo;
+import com.aula.mobile_hivemind.dto.mongo.RegistroParadaRequestDTO;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.datepicker.CalendarConstraints;
 import com.google.android.material.datepicker.MaterialDatePicker;
 import com.google.firebase.firestore.FirebaseFirestore;
 
-import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -50,7 +50,7 @@ public class AddParadaFragment extends Fragment {
     private TextView setor;
     private EditText descricaoParada;
     private EditText editTextDATAPARADA;
-    private com.aula.mobile_hivemind.api.ApiService apiService;
+    private ApiServiceMongo apiServiceMongo;
 
     private FirebaseFirestore db;
     private String userSetor;
@@ -67,7 +67,7 @@ public class AddParadaFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        apiService = RetrofitClient.getApiService();
+        apiServiceMongo = RetrofitClient.getApiService();
         db = FirebaseFirestore.getInstance();
 
         hideFab();
@@ -261,7 +261,7 @@ public class AddParadaFragment extends Fragment {
         btnAdicionarParada.setEnabled(false);
         btnAdicionarParada.setText("Salvando...");
 
-        Call<ResponseBody> call = apiService.criarRegistro(requestDTO);
+        Call<ResponseBody> call = apiServiceMongo.criarRegistro(requestDTO);
         call.enqueue(new Callback<ResponseBody>() {
             @Override
             public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {

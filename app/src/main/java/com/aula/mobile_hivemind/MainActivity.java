@@ -1,6 +1,5 @@
 package com.aula.mobile_hivemind;
 
-import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
@@ -199,5 +198,10 @@ public class MainActivity extends AppCompatActivity {
         }
 
         NavigationUI.setupWithNavController(navView, navController);
+    }
+
+    // ----------------- Nova Função ------------------------
+    public void mesclarApi(){
+
     }
 }

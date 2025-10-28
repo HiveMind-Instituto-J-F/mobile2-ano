@@ -1,7 +1,11 @@
-package com.aula.mobile_hivemind.dto;
+package com.aula.mobile_hivemind.dto.mongo;
 
 import com.google.gson.annotations.SerializedName;
-public class RegistroParadaRequestDTO {
+
+public class RegistroParadaResponseDTO {
+    @SerializedName("id")
+    private String id;
+
     @SerializedName("id_maquina")
     private Integer id_maquina;
 
@@ -20,20 +24,12 @@ public class RegistroParadaRequestDTO {
     @SerializedName("date")
     private String date;
 
-
-
-    public RegistroParadaRequestDTO() {}
-
-    public RegistroParadaRequestDTO(Integer id_maquina, String nomeMaquina, Integer id_usuario, String setor, String descricao, String date) {
-        this.id_maquina = id_maquina;
-        this.id_usuario = id_usuario;
-        this.nomeMaquina = nomeMaquina;
-        this.setor = setor;
-        this.date = date;
-        this.descricao = descricao;
-    }
+    public RegistroParadaResponseDTO() {}
 
     // Getters e Setters
+    public String getId() { return id; }
+    public void setId(String id) { this.id = id; }
+
     public Integer getId_maquina() { return id_maquina; }
     public void setId_maquina(Integer id_maquina) { this.id_maquina = id_maquina; }
 
