@@ -5,7 +5,7 @@ import com.google.gson.annotations.SerializedName;
 import java.util.Date;
 
 public class RegistroParadaResponseDTO {
-    @SerializedName("id_registro_paradas")
+    @SerializedName("id")
     private String id;
 
     @SerializedName("id_maquina")
@@ -13,9 +13,6 @@ public class RegistroParadaResponseDTO {
 
     @SerializedName("id_usuario")
     private Integer id_usuario;
-
-    @SerializedName("id_manutencao")
-    private Integer id_manutencao;
 
     @SerializedName("des_parada")
     private String des_parada;
@@ -97,13 +94,5 @@ public class RegistroParadaResponseDTO {
 
     public void setHora_Inicio(Date hora_Inicio) {
         this.hora_Inicio = hora_Inicio;
-    }
-
-    public Integer getId_manutencao() {
-        return id_manutencao;
-    }
-
-    public void setId_manutencao(Integer id_manutencao) {
-        this.id_manutencao = id_manutencao;
     }
 }

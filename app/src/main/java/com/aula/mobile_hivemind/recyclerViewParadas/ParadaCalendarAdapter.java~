@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.aula.mobile_hivemind.R;
 
 import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
@@ -53,46 +54,22 @@ public class ParadaCalendarAdapter extends RecyclerView.Adapter<ParadaCalendarAd
     public void onBindViewHolder(@NonNull MaquinaViewHolder holder, int position) {
         Parada maquina = listaMaquinas.get(position);
 
-        // ✅ CORRIGIDO: Usando os novos getters
-        holder.tvTitulo.setText("Máquina ID: " + maquina.getId_maquina());
+        holder.tvTitulo.setText(maquina.getNomeMaquina());
 
-        // ✅ CORRIGIDO: Formatando a data
-        String dataFormatada = "Data não informada";
-        if (maquina.getDt_parada() != null) {
-            SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
-            dataFormatada = sdf.format(maquina.getDt_parada());
+        // Se não tiver hora, mostrar a data ou deixar vazio
+        if (maquina.getDataParada() != null) {
+            holder.tvHora.setText(maquina.getDataParada());
+        } else {
+            holder.tvHora.setText("Data não informada");
         }
-        holder.tvHora.setText(dataFormatada);
 
         holder.itemView.setOnClickListener(v -> {
-            // ✅ CORRIGIDO: Usando os novos getters no detalhe
-            String dataDetalhe = "Data não informada";
-            String horaInicio = "Não informada";
-            String horaFim = "Não informada";
-
-            if (maquina.getDt_parada() != null) {
-                SimpleDateFormat sdfDetalhe = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
-                dataDetalhe = sdfDetalhe.format(maquina.getDt_parada());
-            }
-
-            if (maquina.getHora_Inicio() != null) {
-                SimpleDateFormat sdfHora = new SimpleDateFormat("HH:mm", Locale.getDefault());
-                horaInicio = sdfHora.format(maquina.getHora_Inicio());
-            }
-
-            if (maquina.getHora_Fim() != null) {
-                SimpleDateFormat sdfHora = new SimpleDateFormat("HH:mm", Locale.getDefault());
-                horaFim = sdfHora.format(maquina.getHora_Fim());
-            }
-
-            String detalhes = "ID: " + (maquina.getId() != null ? maquina.getId() : "-") +
-                    "\nID da máquina: " + maquina.getId_maquina() +
-                    "\nID do usuário: " + maquina.getId_usuario() +
-                    "\nSetor: " + (maquina.getDes_setor() != null ? maquina.getDes_setor() : "-") +
-                    "\nDescrição: " + (maquina.getDes_parada() != null ? maquina.getDes_parada() : "-") +
-                    "\nData: " + dataDetalhe +
-                    "\nHora Início: " + horaInicio +
-                    "\nHora Fim: " + horaFim;
+            String detalhes = "ID da máquina: " + maquina.getIdMaquina() +
+                    "\nNome da máquina: " + maquina.getNomeMaquina() +
+                    "\nCódigo Colaborador: " + (maquina.getCodigoColaborador() != null ? maquina.getCodigoColaborador() : "-") +
+                    "\nSetor: " + (maquina.getSetor() != null ? maquina.getSetor() : "-") +
+                    "\nDescrição: " + (maquina.getDescricaoParada() != null ? maquina.getDescricaoParada() : "-") +
+                    "\nData: " + (maquina.getDataParada() != null ? maquina.getDataParada() : "-");
 
             new AlertDialog.Builder(context)
                     .setTitle("Detalhes da Parada")

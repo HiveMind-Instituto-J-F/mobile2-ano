@@ -10,17 +10,19 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.aula.mobile_hivemind.R;
 
+import java.text.SimpleDateFormat;
 import java.util.List;
+import java.util.Locale;
 
-public class ParadaAdapter extends RecyclerView.Adapter<com.aula.mobile_hivemind.recyclerViewParadas.ParadaAdapter.ViewHolder> {
-    private List<com.aula.mobile_hivemind.recyclerViewParadas.Parada> listParadas;
+public class ParadaAdapter extends RecyclerView.Adapter<ParadaAdapter.ViewHolder> {
+    private List<Parada> listParadas;
     private OnItemClickListener onItemClickListener;
 
     public interface OnItemClickListener {
-        void onItemClick(com.aula.mobile_hivemind.recyclerViewParadas.Parada parada);
+        void onItemClick(Parada parada);
     }
 
-    public ParadaAdapter(List<com.aula.mobile_hivemind.recyclerViewParadas.Parada> listParadas) {
+    public ParadaAdapter(List<Parada> listParadas) {
         this.listParadas = listParadas;
     }
 
@@ -30,14 +32,14 @@ public class ParadaAdapter extends RecyclerView.Adapter<com.aula.mobile_hivemind
 
     @NonNull
     @Override
-    public com.aula.mobile_hivemind.recyclerViewParadas.ParadaAdapter.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.item_parada, parent, false);
-        return new com.aula.mobile_hivemind.recyclerViewParadas.ParadaAdapter.ViewHolder(view);
+        return new ViewHolder(view);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull com.aula.mobile_hivemind.recyclerViewParadas.ParadaAdapter.ViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         Parada parada = listParadas.get(position);
         holder.bind(parada);
 
@@ -53,27 +55,37 @@ public class ParadaAdapter extends RecyclerView.Adapter<com.aula.mobile_hivemind
         return listParadas.size();
     }
 
-    public void setParadas(List<com.aula.mobile_hivemind.recyclerViewParadas.Parada> paradas) {
+    public void setParadas(List<Parada> paradas) {
         this.listParadas = paradas;
         notifyDataSetChanged();
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
-        private TextView textNomeMaquina;
+        private TextView textIdMaquina;
         private TextView textDataParada;
-        private TextView textCodigoColaborador;
+        private TextView textIdUsuario;
+        private TextView textSetor;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
-            textNomeMaquina = itemView.findViewById(R.id.textNomeMaquina);
+            textIdMaquina = itemView.findViewById(R.id.textIdMaquina);
             textDataParada = itemView.findViewById(R.id.textDataParada);
-            textCodigoColaborador = itemView.findViewById(R.id.textCodigoColaborador);
+            textIdUsuario = itemView.findViewById(R.id.textIdUsuario);
+            textSetor = itemView.findViewById(R.id.textSetor);
         }
 
         public void bind(Parada parada) {
-            textNomeMaquina.setText(parada.getNomeMaquina());
-            textDataParada.setText("Data: " + parada.getDataParada());
-            textCodigoColaborador.setText("Cód. Colaborador: " + parada.getCodigoColaborador());
+            // Formatando a data
+            String dataFormatada = "Data: N/A";
+            if (parada.getDt_parada() != null) {
+                SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
+                dataFormatada = "Data: " + sdf.format(parada.getDt_parada());
+            }
+
+            textIdMaquina.setText("ID Máquina: " + parada.getId_maquina());
+            textDataParada.setText(dataFormatada);
+            textIdUsuario.setText("ID Usuário: " + parada.getId_usuario());
+            textSetor.setText("Setor: " + parada.getDes_setor());
         }
     }
 }

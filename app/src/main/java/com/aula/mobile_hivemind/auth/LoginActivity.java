@@ -30,8 +30,8 @@ public class LoginActivity extends AppCompatActivity {
 
         Button btnEntrar = findViewById(R.id.btnEntrar);
         btnEntrar.setOnClickListener(v -> {
-            String txtEmail = ((EditText) findViewById(R.id.editTextEMAILCONT)).getText().toString();
-            String txtSenha = ((EditText) findViewById(R.id.editTextPassword)).getText().toString();
+            String txtEmail = ((EditText) findViewById(R.id.editTextEMAILCONT)).getText().toString().trim();
+            String txtSenha = ((EditText) findViewById(R.id.editTextPassword)).getText().toString().trim();
 
             if (txtEmail.isEmpty() || txtSenha.isEmpty()) {
                 Toast.makeText(LoginActivity.this, "Preencha todos os campos", Toast.LENGTH_SHORT).show();
@@ -63,6 +63,7 @@ public class LoginActivity extends AppCompatActivity {
                             android.content.SharedPreferences sharedPreferences = getSharedPreferences("ProfilePrefs", MODE_PRIVATE);
                             android.content.SharedPreferences.Editor editor = sharedPreferences.edit();
                             editor.putString("user_email", email); // 🔧 SALVA O EMAIL
+                            editor.putInt("user_id", Integer.parseInt(document.getId())); // 🔧 SALVA O ID
                             editor.apply(); // 🔧 IMPORTANTE: Salva imediatamente
 
                             Log.d("Login", "Email salvo no SharedPreferences: " + email);
@@ -94,7 +95,7 @@ public class LoginActivity extends AppCompatActivity {
             case "operador":
                 return "regular";
             case "engenheiro":
-                return "MOP";
+                return "man";
             case "supervisor":
                 return "RH";
             default:

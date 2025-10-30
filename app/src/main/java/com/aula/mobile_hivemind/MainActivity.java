@@ -157,7 +157,7 @@ public class MainActivity extends AppCompatActivity {
             navView.getMenu().findItem(R.id.navigation_homerh).setVisible(false);
             navView.getMenu().findItem(R.id.navigation_logout).setVisible(true);
 
-        } else if ("MOP".equals(userType)) {
+        } else if ("man".equals(userType)) {
             // ENGENHEIRO
             appBarConfiguration = new AppBarConfiguration.Builder(
                     R.id.navigation_home,

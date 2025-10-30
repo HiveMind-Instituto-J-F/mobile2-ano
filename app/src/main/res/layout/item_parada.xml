@@ -15,7 +15,7 @@
         android:padding="16dp">
 
         <TextView
-            android:id="@+id/textNomeMaquina"
+            android:id="@+id/textIdMaquina"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textSize="18sp"
@@ -31,7 +31,15 @@
             android:layout_marginTop="4dp" />
 
         <TextView
-            android:id="@+id/textCodigoColaborador"
+            android:id="@+id/textIdUsuario"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="12sp"
+            android:textColor="@color/gray"
+            android:layout_marginTop="2dp" />
+
+        <TextView
+            android:id="@+id/textSetor"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textSize="12sp"

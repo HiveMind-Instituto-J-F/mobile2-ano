@@ -14,7 +14,7 @@ import retrofit2.http.POST;
 import retrofit2.http.PUT;
 import retrofit2.http.Path;
 
-public interface ApiService {
+public interface ApiMongoRegistroParadasService {
     @GET("api-mongo/selecionar")
     Call<List<RegistroParadaResponseDTO>> getAllRegistros();
 
@@ -28,5 +28,5 @@ public interface ApiService {
     Call<String> atualizarParcialmente(@Path("id") String id, @Body RegistroParadaRequestDTO requestDTO);
 
     @DELETE("api-mongo/deletar/{id}")
-    Call<String> deletarRegistro(@Path("id") String id);
+    Call<okhttp3.ResponseBody> deletarRegistro(@Path("id") String id);
 }

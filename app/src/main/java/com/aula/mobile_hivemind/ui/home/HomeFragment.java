@@ -1,13 +1,12 @@
 package com.aula.mobile_hivemind.ui.home;
 
-import android.app.AlertDialog;
-import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -15,11 +14,14 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.NavController;
+import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.aula.mobile_hivemind.MainActivity;
 import com.aula.mobile_hivemind.R;
+import com.aula.mobile_hivemind.api.ApiMongoRegistroParadasService;
 import com.aula.mobile_hivemind.api.RetrofitClient;
 import com.aula.mobile_hivemind.dto.RegistroParadaResponseDTO;
 import com.aula.mobile_hivemind.recyclerViewParadas.Parada;
@@ -29,9 +31,12 @@ import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
 import com.google.firebase.firestore.FirebaseFirestore;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 import retrofit2.Call;
@@ -48,13 +53,14 @@ public class HomeFragment extends Fragment {
 
     private List<Parada> paradasList;
     private List<Parada> allParadasList;
-    private com.aula.mobile_hivemind.api.ApiService apiService;
+    private ApiMongoRegistroParadasService apiService;
 
     private FirebaseFirestore db;
     private SharedPreferences sharedPreferences;
     private String userEmail;
     private String userType;
     private String userSetor;
+    private int userId;
 
     @Nullable
     @Override
@@ -72,7 +78,7 @@ public class HomeFragment extends Fragment {
         recyclerViewParadas = view.findViewById(R.id.recyclerViewParadas);
 
         // Inicializar API Service
-        apiService = RetrofitClient.getApiService();
+        apiService = RetrofitClient.getApiMongoRegistroService();
 
         // Inicializar Firestore e SharedPreferences
         db = FirebaseFirestore.getInstance();
@@ -123,6 +129,7 @@ public class HomeFragment extends Fragment {
         }
 
         userEmail = sharedPreferences.getString("user_email", null);
+        userId = sharedPreferences.getInt("user_id", 0);
 
         if (userEmail != null && !userEmail.isEmpty()) {
             db.collection("trabalhadores")
@@ -141,7 +148,7 @@ public class HomeFragment extends Fragment {
                                         userType = "regular";
                                         break;
                                     case "engenheiro":
-                                        userType = "MOP";
+                                        userType = "man";
                                         break;
                                     case "supervisor":
                                         userType = "RH";
@@ -185,28 +192,48 @@ public class HomeFragment extends Fragment {
     private void abrirModalParada(Parada parada) {
         View modalView = LayoutInflater.from(requireContext()).inflate(R.layout.modal_parada, null);
 
+        TextView txtId = modalView.findViewById(R.id.txtId);
         TextView txtIdMaquina = modalView.findViewById(R.id.txtIdMaquina);
-        TextView txtCodigoColaborador = modalView.findViewById(R.id.txtCodigoColaborador);
-        TextView txtNomeMaquina = modalView.findViewById(R.id.txtNomeMaquina);
+        TextView txtIdUsuario = modalView.findViewById(R.id.txtIdUsuario);
+        TextView txtDescricaoParada = modalView.findViewById(R.id.txtDescricaoParada);
         TextView txtSetor = modalView.findViewById(R.id.txtSetor);
-        TextView txtDataParada = modalView.findViewById(R.id.txtData);
-        TextView txtDescricaoParada = modalView.findViewById(R.id.txtDescricao);
+        TextView txtDataParada = modalView.findViewById(R.id.txtDataParada);
+        TextView txtHoraInicio = modalView.findViewById(R.id.txtHoraInicio);
+        TextView txtHoraFim = modalView.findViewById(R.id.txtHoraFim);
+        ImageButton btnFechar = modalView.findViewById(R.id.btnFechar);
+        Button btnManutencao = modalView.findViewById(R.id.btnManutencao);
 
-        txtIdMaquina.setText(String.valueOf(parada.getIdMaquina()));
-        txtCodigoColaborador.setText(String.valueOf(parada.getCodigoColaborador()));
-        txtNomeMaquina.setText(parada.getNomeMaquina());
-        txtSetor.setText(parada.getSetor());
-        txtDataParada.setText(parada.getDataParada());
-        txtDescricaoParada.setText(parada.getDescricaoParada());
+        btnManutencao.setVisibility(View.GONE);
+
+        if ("man".equals(userType)) {
+            btnManutencao.setVisibility(View.VISIBLE);
+        }
+
+        // Preenchendo com os dados do ResponseDTO - USANDO OS NOVOS GETTERS
+        txtId.setText(parada.getId() != null ? parada.getId() : "N/A");
+        txtIdMaquina.setText(String.valueOf(parada.getId_maquina()));
+        txtIdUsuario.setText(String.valueOf(parada.getId_usuario()));
+        txtDescricaoParada.setText(parada.getDes_parada());
+        txtSetor.setText(parada.getDes_setor());
+
+        // Formatando as datas
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
+        SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm", Locale.getDefault());
+
+        txtDataParada.setText(parada.getDt_parada() != null ? dateFormat.format(parada.getDt_parada()) : "N/A");
+        txtHoraInicio.setText(parada.getHora_Inicio() != null ? timeFormat.format(parada.getHora_Inicio()) : "N/A");
+        txtHoraFim.setText(parada.getHora_Fim() != null ? timeFormat.format(parada.getHora_Fim()) : "N/A");
 
         BottomSheetDialog bottomSheetDialog = new BottomSheetDialog(requireContext());
         bottomSheetDialog.setContentView(modalView);
         bottomSheetDialog.show();
 
-        ImageButton btnFechar = modalView.findViewById(R.id.btnFechar);
-        if (btnFechar != null) {
-            btnFechar.setOnClickListener(v -> bottomSheetDialog.dismiss());
-        }
+        btnFechar.setOnClickListener(v -> bottomSheetDialog.dismiss());
+
+        btnManutencao.setOnClickListener(v -> {
+            bottomSheetDialog.dismiss();
+            abrirManutencao(parada);
+        });
     }
 
     private void carregarParadas() {
@@ -231,17 +258,15 @@ public class HomeFragment extends Fragment {
                     if (!"regular".equals(userType)) {
                         Set<String> setores = new HashSet<>();
                         for (Parada parada : paradasList) {
-                            if (parada.getSetor() != null && !parada.getSetor().isEmpty()) {
-                                setores.add(parada.getSetor());
+                            if (parada.getDes_setor() != null && !parada.getDes_setor().isEmpty()) {
+                                setores.add(parada.getDes_setor());
                             }
                         }
                         addChipsToChipGroup(new ArrayList<>(setores));
                     }
 
-//                    Toast.makeText(getContext(), "Paradas carregadas: " + paradasList.size(), Toast.LENGTH_SHORT).show();
-
                 } else {
-//                    Toast.makeText(getContext(), "Erro ao carregar paradas: " + response.code(), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(), "Erro ao carregar paradas: " + response.code(), Toast.LENGTH_SHORT).show();
                 }
             }
 
@@ -252,12 +277,44 @@ public class HomeFragment extends Fragment {
         });
     }
 
+    public void abrirManutencao(Parada parada) {
+        if (!"man".equals(userType)) {
+            Toast.makeText(getContext(), "Acesso restrito a engenheiros.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        Bundle bundle = new Bundle();
+        bundle.putInt("idMaquina", parada.getId_maquina());
+        bundle.putInt("codigoColaborador", parada.getId_usuario());
+        bundle.putString("setor", parada.getDes_setor());
+        bundle.putString("descricaoParada", parada.getDes_parada());
+        bundle.putInt("userId", userId);
+
+        // ✅ ENVIAR DATA E HORÁRIOS DA PARADA ORIGINAL
+        bundle.putString("dataParada", formatarData(parada.getDt_parada()));
+        bundle.putSerializable("horaInicio", parada.getHora_Inicio());
+        bundle.putSerializable("horaFim", parada.getHora_Fim());
+
+        // Passar o ID do MongoDB também
+        bundle.putString("idMongo", parada.getId());
+
+        NavController navController = Navigation.findNavController(requireActivity(), R.id.nav_host_fragment_activity_main);
+        navController.navigate(R.id.maintenanceFragment, bundle);
+    }
+
+    // Método auxiliar para formatar data
+    private String formatarData(Date data) {
+        if (data == null) return "";
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        return sdf.format(data);
+    }
+
     private void aplicarFiltroUsuario() {
         paradasList.clear();
 
         if ("regular".equals(userType)) {
             for (Parada parada : allParadasList) {
-                if (parada.getSetor() != null && parada.getSetor().equals(userSetor)) {
+                if (parada.getDes_setor() != null && parada.getDes_setor().equals(userSetor)) {
                     paradasList.add(parada);
                 }
             }
@@ -279,12 +336,14 @@ public class HomeFragment extends Fragment {
 
     private Parada converterParaParada(RegistroParadaResponseDTO registro) {
         return new Parada(
-                registro.getId_maquina(),  // idMaquina
-                registro.getNomeMaquina(), // nomeMaquina
-                registro.getId_usuario(),  // códigoColaborador
-                registro.getSetor(),       // setor
-                registro.getDescricao(),    // descricaoParada
-                registro.getDate()        // dataParada
+                registro.getId(),                    // id
+                registro.getId_maquina(),           // id_maquina
+                registro.getId_usuario(),           // id_usuario
+                registro.getDes_parada(),           // des_parada
+                registro.getDes_setor(),            // des_setor
+                registro.getDt_parada(),            // dt_parada
+                registro.getHora_Inicio(),          // hora_Inicio
+                registro.getHora_Fim()              // hora_Fim
         );
     }
 
@@ -356,7 +415,7 @@ public class HomeFragment extends Fragment {
     private List<Parada> filterParadasBySector(String sectorName) {
         List<Parada> filteredList = new ArrayList<>();
         for (Parada parada : allParadasList) {
-            if (sectorName.equals(parada.getSetor())) {
+            if (sectorName.equals(parada.getDes_setor())) {
                 filteredList.add(parada);
             }
         }

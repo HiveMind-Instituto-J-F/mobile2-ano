@@ -1,0 +1,13 @@
+package com.aula.mobile_hivemind.api;
+
+import com.aula.mobile_hivemind.dto.RegistroParadaRequestDTO;
+
+import okhttp3.ResponseBody;
+import retrofit2.Call;
+import retrofit2.http.Body;
+import retrofit2.http.POST;
+
+public interface ApiSQLRegistroParadasService {
+    @POST("api/registro/inserirProcedure")
+    Call<ResponseBody> inserirRegistro(@Body RegistroParadaRequestDTO requestDTO);
+}

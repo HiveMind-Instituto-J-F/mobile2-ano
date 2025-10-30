@@ -83,12 +83,14 @@ public class CalendarFragment extends Fragment {
     private void configurarLayoutResponsivo() {
         boolean landscape = getResources().getConfiguration().orientation ==
                 Configuration.ORIENTATION_LANDSCAPE;
-        
+
+        binding.recyclerViewCalendar.setLayoutManager(
+                landscape ? new GridLayoutManager(getContext(), 1)
+                        : new LinearLayoutManager(getContext())
+        );
+
         if (landscape)
-            binding.recyclerViewCalendar.setLayoutManager(
-                    landscape ? new GridLayoutManager(getContext(), 1)
-                            : new LinearLayoutManager(getContext())
-            );
+            binding.recyclerViewCalendar.setLayoutManager(new GridLayoutManager(getContext(), 2));
         else
             binding.recyclerViewCalendar.setLayoutManager(new LinearLayoutManager(getContext()));
     }

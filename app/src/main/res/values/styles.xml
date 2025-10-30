@@ -57,4 +57,17 @@
         <item name="android:windowContentOverlay">@null</item>
     </style>
 
+    <!-- Styles para o calendário responsivo -->
+    <style name="CalendarWeekDayStyle">
+        <item name="android:textSize">12sp</item>
+        <item name="android:textColor">@color/md_theme_secondaryContainer</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+    </style>
+
+    <style name="CalendarDateStyle">
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColor">@color/md_theme_primaryFixed_highContrast</item>
+        <item name="android:fontFamily">sans-serif</item>
+    </style>
+
 </resources>

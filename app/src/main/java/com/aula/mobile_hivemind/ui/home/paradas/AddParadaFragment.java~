@@ -29,7 +29,6 @@ import com.google.android.material.datepicker.CalendarConstraints;
 import com.google.android.material.datepicker.MaterialDatePicker;
 import com.google.firebase.firestore.FirebaseFirestore;
 
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -46,12 +45,13 @@ public class AddParadaFragment extends Fragment {
     private ImageButton btnBack;
     private MaterialButton btnAdicionarParada;
     private EditText idMaquina;
+    private EditText nomeMaquina;
     private EditText codigoColaborador;
     private TextView setor;
     private EditText descricaoParada;
     private EditText editTextDATAPARADA;
-
     private ApiMongoRegistroParadasService apiService;
+
     private FirebaseFirestore db;
     private String userSetor;
 
@@ -72,13 +72,14 @@ public class AddParadaFragment extends Fragment {
 
         hideFab();
         inicializarViews(view);
-        carregarSetorUsuario();
+        carregarSetorUsuario(); // 🔧 CARREGA O SETOR DO USUÁRIO
         configurarDatePicker();
         configurarBotoes();
     }
 
     private void inicializarViews(View view) {
         idMaquina = view.findViewById(R.id.editIdMaquina);
+        nomeMaquina = view.findViewById(R.id.editNomeMaquina);
         codigoColaborador = view.findViewById(R.id.editCodigoColaborador);
         setor = view.findViewById(R.id.textSetor);
         descricaoParada = view.findViewById(R.id.editDescricaoParada);
@@ -89,7 +90,9 @@ public class AddParadaFragment extends Fragment {
         setor.setText("Carregando setor...");
     }
 
+    // 🔧 MÉTODO SIMPLES: CARREGA O SETOR DO USUÁRIO LOGADO
     private void carregarSetorUsuario() {
+        // Pega o email do usuário logado do SharedPreferences
         SharedPreferences prefs = requireContext().getSharedPreferences("ProfilePrefs", 0);
         String userEmail = prefs.getString("user_email", "");
 
@@ -98,6 +101,7 @@ public class AddParadaFragment extends Fragment {
             return;
         }
 
+        // Busca o usuário no Firestore
         db.collection("trabalhadores")
                 .whereEqualTo("login", userEmail)
                 .limit(1)
@@ -108,6 +112,7 @@ public class AddParadaFragment extends Fragment {
 
                         if (userSetor != null && !userSetor.isEmpty()) {
                             setor.setText(userSetor);
+                            Log.d("AddParadaFragment", "Setor carregado: " + userSetor);
                         } else {
                             setor.setText("Setor não definido");
                         }
@@ -167,6 +172,10 @@ public class AddParadaFragment extends Fragment {
 
     private void mostrarDatePicker() {
         Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+        calendar.set(Calendar.HOUR_OF_DAY, 0);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
         long today = calendar.getTimeInMillis();
 
         CalendarConstraints.Builder constraintsBuilder = new CalendarConstraints.Builder();
@@ -198,41 +207,54 @@ public class AddParadaFragment extends Fragment {
 
             String setorText = setor.getText().toString().trim();
 
-            if (setorText.contains("Carregando") || setorText.contains("Usuário") || setorText.contains("não")) {
+            // Só permite salvar se o setor foi carregado corretamente
+            if (setorText.equals("Carregando setor...") ||
+                    setorText.equals("Usuário não logado") ||
+                    setorText.equals("Usuário não encontrado") ||
+                    setorText.equals("Setor não definido")) {
                 Toast.makeText(requireContext(), "Aguarde o setor ser carregado", Toast.LENGTH_LONG).show();
                 return;
             }
 
-            // converter data string -> Date
-            SimpleDateFormat sdf = new SimpleDateFormat("dd, MMM yyyy", Locale.getDefault());
-            Date dataParada = sdf.parse(editTextDATAPARADA.getText().toString().trim());
-
-            Date agora = new Date();
-
             RegistroParadaRequestDTO requestDTO = new RegistroParadaRequestDTO(
                     Integer.parseInt(idMaquina.getText().toString().trim()),
+                    nomeMaquina.getText().toString().trim(),
                     Integer.parseInt(codigoColaborador.getText().toString().trim()),
+                    setorText, // 🔧 SETOR DO USUÁRIO (automático)
                     descricaoParada.getText().toString().trim(),
-                    setorText,
-                    dataParada,
-                    agora,
-                    agora
+                    editTextDATAPARADA.getText().toString().trim()
             );
 
             salvarNoMongoDB(requestDTO);
-
-        } catch (ParseException e) {
-            Toast.makeText(requireContext(), "Erro ao converter a data", Toast.LENGTH_SHORT).show();
+        } catch (NumberFormatException e) {
+            Toast.makeText(requireContext(), "ID Máquina e Código Colaborador devem ser números", Toast.LENGTH_SHORT).show();
         } catch (Exception e) {
             Toast.makeText(requireContext(), "Erro ao salvar parada", Toast.LENGTH_SHORT).show();
         }
     }
 
     private boolean validarCampos() {
-        return !idMaquina.getText().toString().trim().isEmpty()
-                && !codigoColaborador.getText().toString().trim().isEmpty()
-                && !descricaoParada.getText().toString().trim().isEmpty()
-                && !editTextDATAPARADA.getText().toString().trim().isEmpty();
+        if (idMaquina.getText().toString().trim().isEmpty()) {
+            Toast.makeText(requireContext(), "ID da Máquina é obrigatório", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+        if (nomeMaquina.getText().toString().trim().isEmpty()) {
+            Toast.makeText(requireContext(), "Nome da Máquina é obrigatório", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+        if (codigoColaborador.getText().toString().trim().isEmpty()) {
+            Toast.makeText(requireContext(), "Código do Colaborador é obrigatório", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+        if (descricaoParada.getText().toString().trim().isEmpty()) {
+            Toast.makeText(requireContext(), "Descrição da Parada é obrigatória", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+        if (editTextDATAPARADA.getText().toString().trim().isEmpty()) {
+            Toast.makeText(requireContext(), "Data da Parada é obrigatória", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+        return true;
     }
 
     private void salvarNoMongoDB(RegistroParadaRequestDTO requestDTO) {
@@ -271,6 +293,7 @@ public class AddParadaFragment extends Fragment {
 
     private void limparCampos() {
         idMaquina.setText("");
+        nomeMaquina.setText("");
         codigoColaborador.setText("");
         descricaoParada.setText("");
         editTextDATAPARADA.setText("");

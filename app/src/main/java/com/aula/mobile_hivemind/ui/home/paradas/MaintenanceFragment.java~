@@ -102,7 +102,7 @@ public class MaintenanceFragment extends Fragment {
         editTextDATAMANUTENCAO.setText(dataAtual);
 
         // ✅ PREENCHER AUTOMATICAMENTE O ID DO FUNCIONÁRIO LOGADO
-        editIdFunc.setText(String.valueOf(idManutencista));
+        editIdFunc.setText(String.valueOf(idUsuario));
         editIdFunc.setEnabled(false); // Torna o campo não editável
         editIdFunc.setFocusable(false); // Impede foco no campo
         txtIdMaquina.setEnabled(false);
