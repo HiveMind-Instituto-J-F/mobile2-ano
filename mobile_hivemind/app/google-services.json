@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "519907418384",
+    "project_id": "leantrack-2d3ef",
+    "storage_bucket": "leantrack-2d3ef.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:519907418384:android:e4924403a6009d422cc595",
+        "android_client_info": {
+          "package_name": "com.aula.mobile_hivemind"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCD_a0cMkkaw-6E5ANtJG2P2Y389nd_l8M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

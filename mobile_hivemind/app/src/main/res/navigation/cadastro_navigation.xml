@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/cadastro_navigation"
+    app:startDestination="@id/cadastroBasicoFragment">
+
+    <fragment
+        android:id="@+id/cadastroBasicoFragment"
+        android:name="com.aula.mobile_hivemind.auth.cadastro.CadastroBasicoFragment"
+        tools:layout="@layout/fragment_cadastro_basico"
+        android:label="fragment_cadastro_basico">
+        <action
+            android:id="@+id/action_cadastroBasicoFragment_to_cadastroEnderecoFragment"
+            app:destination="@id/cadastroEnderecoFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/cadastroEnderecoFragment"
+        android:name="com.aula.mobile_hivemind.auth.cadastro.CadastroEnderecoFragment"
+        tools:layout="@layout/fragment_cadastro_endereco"
+        android:label="fragment_cadastro_endereco">
+        <action
+            android:id="@+id/action_cadastroEnderecoFragment_to_cadastroEstruturaFragment"
+            app:destination="@id/cadastroEstruturaFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/cadastroEstruturaFragment"
+        android:name="com.aula.mobile_hivemind.auth.cadastro.CadastroEstruturaFragment"
+        tools:layout="@layout/fragment_cadastro_estrutura"
+        android:label="fragment_cadastro_estrutura">
+        <action
+            android:id="@+id/action_cadastroEstruturaFragment_to_cadastroPessoalFragment"
+            app:destination="@id/cadastroPessoalFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/cadastroPessoalFragment"
+        android:name="com.aula.mobile_hivemind.auth.cadastro.CadastroPessoalFragment"
+        tools:layout="@layout/fragment_cadastro_pessoal"
+        android:label="fragment_cadastro_pessoal">
+        <action
+            android:id="@+id/action_cadastroPessoalFragment_to_verificacaoCellFragment"
+            app:destination="@id/verificacaoCellFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/verificacaoCellFragment"
+        android:name="com.aula.mobile_hivemind.auth.VerificacaoCellFragment"
+        tools:layout="@layout/fragment_verificacao_cell"
+        android:label="fragment_verificacao_cell">
+        <action
+            android:id="@+id/action_verificacaoCellFragment_to_verificacaoEmailFragment"
+            app:destination="@id/verificacaoEmailFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/verificacaoEmailFragment"
+        android:name="com.aula.mobile_hivemind.auth.VerificacaoEmailFragment"
+        tools:layout="@layout/fragment_verificacao_email"
+        android:label="fragment_verificacao_email">
+        <action
+            android:id="@+id/action_verificacaoEmailFragment_to_criacaoContaFragment"
+            app:destination="@id/criacaoContaFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/criacaoContaFragment"
+        android:name="com.aula.mobile_hivemind.auth.cadastro.CriacaoContaFragment"
+        tools:layout="@layout/fragment_criacao_conta"
+        android:label="fragment_criacao_conta" />
+    <activity
+        android:id="@+id/loginActivity"
+        android:name="com.aula.mobile_hivemind.auth.login.LoginActivity"
+        tools:layout="@layout/activity_login"
+        android:label="activity_login" />
+</navigation>

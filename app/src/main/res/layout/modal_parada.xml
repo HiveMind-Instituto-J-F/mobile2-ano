@@ -1,0 +1,283 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:gravity="center_horizontal">
+
+    <!-- Cabeçalho -->
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Detalhes da Parada"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:layout_centerHorizontal="true" />
+
+        <ImageButton
+            android:id="@+id/btnFechar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@android:drawable/ic_menu_close_clear_cancel"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true" />
+
+    </RelativeLayout>
+
+    <!-- Container das informações -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center">
+
+        <!-- Nome da Máquina -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="12dp"
+            android:gravity="center">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Nome da Máquina:"
+                android:textStyle="bold"
+                android:textColor="@color/black"
+                android:paddingEnd="8dp" />
+
+            <TextView
+                android:id="@+id/txtNomeMaquina"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="-"
+                android:textColor="@color/black" />
+
+        </LinearLayout>
+
+        <!-- ID da Máquina -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="12dp"
+            android:gravity="center">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="ID da Máquina:"
+                android:textStyle="bold"
+                android:textColor="@color/black"
+                android:paddingEnd="8dp" />
+
+            <TextView
+                android:id="@+id/txtIdMaquina"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="-"
+                android:textColor="@color/black" />
+
+        </LinearLayout>
+
+        <!-- Código do Colaborador -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="12dp"
+            android:gravity="center">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Código do Colaborador:"
+                android:textStyle="bold"
+                android:textColor="@color/black"
+                android:paddingEnd="8dp" />
+
+            <TextView
+                android:id="@+id/txtCodigoColaborador"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="-"
+                android:textColor="@color/black" />
+
+        </LinearLayout>
+
+        <!-- Data da Parada -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="12dp"
+            android:gravity="center">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Data da Parada:"
+                android:textStyle="bold"
+                android:textColor="@color/black"
+                android:paddingEnd="8dp" />
+
+            <TextView
+                android:id="@+id/txtData"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="-"
+                android:textColor="@color/black" />
+
+        </LinearLayout>
+
+        <!-- Hora de Início -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="12dp"
+            android:gravity="center">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Hora de Início:"
+                android:textStyle="bold"
+                android:textColor="@color/black"
+                android:paddingEnd="8dp" />
+
+            <TextView
+                android:id="@+id/txtHoraInicio"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="-"
+                android:textColor="@color/black" />
+
+        </LinearLayout>
+
+        <!-- Hora de Término -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="12dp"
+            android:gravity="center">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Hora de Término:"
+                android:textStyle="bold"
+                android:textColor="@color/black"
+                android:paddingEnd="8dp" />
+
+            <TextView
+                android:id="@+id/txtHoraFim"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="-"
+                android:textColor="@color/black" />
+
+        </LinearLayout>
+
+        <!-- Duração -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="12dp"
+            android:gravity="center">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Duração:"
+                android:textStyle="bold"
+                android:textColor="@color/black"
+                android:paddingEnd="8dp" />
+
+            <TextView
+                android:id="@+id/txtDuracao"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="-"
+                android:textColor="@color/black" />
+
+        </LinearLayout>
+
+        <!-- Setor -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="12dp"
+            android:gravity="center">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Setor:"
+                android:textStyle="bold"
+                android:textColor="@color/black"
+                android:paddingEnd="8dp" />
+
+            <TextView
+                android:id="@+id/txtSetor"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="-"
+                android:textColor="@color/black" />
+
+        </LinearLayout>
+
+        <!-- Descrição da Parada -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginBottom="8dp"
+            android:gravity="center">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Descrição da Parada:"
+                android:textStyle="bold"
+                android:textColor="@color/black"
+                android:layout_marginBottom="8dp"
+                android:gravity="center" />
+
+            <TextView
+                android:id="@+id/txtDescricao"
+                android:layout_width="280dp"
+                android:layout_height="wrap_content"
+                android:text="-"
+                android:background="@drawable/edit_text_border"
+                android:padding="12dp"
+                android:minHeight="100dp"
+                android:textColor="@color/black"
+                android:gravity="center"
+                android:textAlignment="center" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/btnFinalizarParada"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Finalizar Parada"
+        android:textColor="@color/white"
+        android:visibility="gone" />
+
+</LinearLayout>
