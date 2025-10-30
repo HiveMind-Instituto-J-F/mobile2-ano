@@ -1,10 +1,13 @@
 package com.aula.mobile_hivemind.dto;
 
 import com.google.gson.annotations.SerializedName;
-
 import java.util.Date;
 
 public class RegistroParadaRequestDTO {
+
+    @SerializedName("id_manutencao")
+    private Integer id_manutencao;
+
     @SerializedName("id_maquina")
     private Integer id_maquina;
 
@@ -20,27 +23,46 @@ public class RegistroParadaRequestDTO {
     @SerializedName("dt_parada")
     private Date dt_parada;
 
-    @SerializedName("hora_Fim")
-    private Date hora_Fim;
-
-    @SerializedName("hora_Inicio")
+    @SerializedName("hora_inicio")
     private Date hora_Inicio;
 
-
+    @SerializedName("hora_fim")
+    private Date hora_Fim;
 
     public RegistroParadaRequestDTO() {}
 
+    public Integer getId_manutencao() {
+        return id_manutencao;
+    }
 
-    public RegistroParadaRequestDTO(Integer id_maquina, Integer id_usuario, String des_parada, String des_setor, Date dt_parada, Date hora_Fim, Date hora_Inicio) {
+    public void setId_manutencao(Integer id_manutencao) {
+        this.id_manutencao = id_manutencao;
+    }
+
+    public RegistroParadaRequestDTO(Integer id_manutencao, Integer id_maquina, Integer id_usuario,
+                                    String des_parada, String des_setor, Date dt_parada,
+                                    Date hora_Inicio, Date hora_Fim) {
+        this.id_manutencao = id_manutencao;
         this.id_maquina = id_maquina;
         this.id_usuario = id_usuario;
         this.des_parada = des_parada;
         this.des_setor = des_setor;
         this.dt_parada = dt_parada;
-        this.hora_Fim = hora_Fim;
         this.hora_Inicio = hora_Inicio;
+        this.hora_Fim = hora_Fim;
     }
 
+    public RegistroParadaRequestDTO(Integer id_maquina, Integer id_usuario, String des_parada, String des_setor, Date dt_parada, Date hora_Inicio, Date hora_Fim) {
+        this.id_maquina = id_maquina;
+        this.id_usuario = id_usuario;
+        this.des_parada = des_parada;
+        this.des_setor = des_setor;
+        this.dt_parada = dt_parada;
+        this.hora_Inicio = hora_Inicio;
+        this.hora_Fim = hora_Fim;
+    }
+
+    // Resto dos getters e setters...
     public Integer getId_maquina() {
         return id_maquina;
     }
@@ -81,19 +103,19 @@ public class RegistroParadaRequestDTO {
         this.dt_parada = dt_parada;
     }
 
-    public Date getHora_Fim() {
-        return hora_Fim;
-    }
-
-    public void setHora_Fim(Date hora_Fim) {
-        this.hora_Fim = hora_Fim;
-    }
-
     public Date getHora_Inicio() {
         return hora_Inicio;
     }
 
     public void setHora_Inicio(Date hora_Inicio) {
         this.hora_Inicio = hora_Inicio;
+    }
+
+    public Date getHora_Fim() {
+        return hora_Fim;
+    }
+
+    public void setHora_Fim(Date hora_Fim) {
+        this.hora_Fim = hora_Fim;
     }
 }

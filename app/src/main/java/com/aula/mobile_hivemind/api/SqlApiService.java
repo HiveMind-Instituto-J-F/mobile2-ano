@@ -1,5 +1,7 @@
 package com.aula.mobile_hivemind.api;
 
+import com.aula.mobile_hivemind.dto.ManutencaoRequestDTO;
+import com.aula.mobile_hivemind.dto.ManutencaoResponseDTO;
 import com.aula.mobile_hivemind.dto.MaquinaResponseDTO;
 import com.aula.mobile_hivemind.dto.ParadaSQLRequestDTO;
 import com.aula.mobile_hivemind.dto.ParadaSQLResponseDTO;
@@ -29,4 +31,10 @@ public interface SqlApiService {
 
     @GET("api/registro/listar")
     Call<List<ParadaSQLResponseDTO>> listarTodasParadas();
+
+    @GET("api/manutencao/listar")
+    Call<List<ManutencaoResponseDTO>> listarManutencoes();
+
+    @POST("api/manutencao/inserir")
+    Call<String> inserirManutencao(@Body ManutencaoRequestDTO manutencao);
 }

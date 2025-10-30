@@ -7,6 +7,10 @@ import java.util.Date;
 import java.util.Locale;
 
 public class ParadaSQLRequestDTO {
+
+    @SerializedName("id_manutencao")
+    private Integer id_manutencao;
+
     @SerializedName("id_maquina")
     private Integer id_maquina;
 
@@ -49,6 +53,14 @@ public class ParadaSQLRequestDTO {
         if (dateTime == null) return null;
         SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss", Locale.getDefault());
         return timeFormat.format(dateTime);
+    }
+
+    public Integer getId_manutencao() {
+        return id_manutencao;
+    }
+
+    public void setId_manutencao(Integer id_manutencao) {
+        this.id_manutencao = id_manutencao;
     }
 
     public Integer getId_maquina() { return id_maquina; }

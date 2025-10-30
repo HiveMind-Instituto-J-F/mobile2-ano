@@ -4,6 +4,7 @@ import java.util.Date;
 
 public class Parada {
     private String id;
+    private Integer id_manutencao;
     private Integer id_maquina;
     private Integer id_usuario;
     private String des_parada;
@@ -26,6 +27,18 @@ public class Parada {
         this.hora_Inicio = hora_Inicio;
     }
 
+    public Parada(String id, Integer id_manutencao, Integer id_maquina, Integer id_usuario, String des_parada,
+                  String des_setor, Date dt_parada, Date hora_Inicio) {
+        this.id = id;
+        this.id_manutencao = id_manutencao;
+        this.id_maquina = id_maquina;
+        this.id_usuario = id_usuario;
+        this.des_parada = des_parada;
+        this.des_setor = des_setor;
+        this.dt_parada = dt_parada;
+        this.hora_Inicio = hora_Inicio;
+    }
+
 
     public String getId() {
         return id;
@@ -33,6 +46,14 @@ public class Parada {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public Integer getId_manutencao() {
+        return id_manutencao;
+    }
+
+    public void setId_manutencao(Integer id_manutencao) {
+        this.id_manutencao = id_manutencao;
     }
 
     public Integer getId_maquina() {

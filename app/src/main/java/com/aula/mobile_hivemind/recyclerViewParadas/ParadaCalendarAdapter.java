@@ -107,58 +107,47 @@ public class ParadaCalendarAdapter extends RecyclerView.Adapter<ParadaCalendarAd
     @Override
     public void onBindViewHolder(@NonNull MaquinaViewHolder holder, int position) {
         Parada maquina = listaMaquinas.get(position);
-        holder.bind(maquina, cacheNomesMaquinas, cacheCarregado);
+
+        // ✅ CORRIGIDO: Usando os novos getters
+        holder.tvTitulo.setText("Máquina ID: " + maquina.getId_maquina());
+
+        // ✅ CORRIGIDO: Formatando a data
+        String dataFormatada = "Data não informada";
+        if (maquina.getDt_parada() != null) {
+            SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
+            dataFormatada = sdf.format(maquina.getDt_parada());
+        }
+        holder.tvHora.setText(dataFormatada);
 
         holder.itemView.setOnClickListener(v -> {
-            // Buscar nome da máquina para o modal (pode ser diferente do cache se ainda não carregou)
-            String nomeMaquinaModal = "Carregando...";
-            if (cacheCarregado && maquina.getId_maquina() != null) {
-                nomeMaquinaModal = cacheNomesMaquinas.getOrDefault(maquina.getId_maquina().longValue(), "Máquina não encontrada");
-            }
-
-            // Formatar data para exibição
-            String dataFormatada = "Não informada";
-            if (maquina.getDt_parada() != null) {
-                SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
-                dataFormatada = dateFormat.format(maquina.getDt_parada());
-            }
-
-            // Formatar horas
+            // ✅ CORRIGIDO: Usando os novos getters no detalhe
+            String dataDetalhe = "Data não informada";
             String horaInicio = "Não informada";
             String horaFim = "Não informada";
+
+            if (maquina.getDt_parada() != null) {
+                SimpleDateFormat sdfDetalhe = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
+                dataDetalhe = sdfDetalhe.format(maquina.getDt_parada());
+            }
+
             if (maquina.getHora_Inicio() != null) {
-                SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm", Locale.getDefault());
-                horaInicio = timeFormat.format(maquina.getHora_Inicio());
+                SimpleDateFormat sdfHora = new SimpleDateFormat("HH:mm", Locale.getDefault());
+                horaInicio = sdfHora.format(maquina.getHora_Inicio());
             }
+
             if (maquina.getHora_Fim() != null) {
-                SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm", Locale.getDefault());
-                horaFim = timeFormat.format(maquina.getHora_Fim());
+                SimpleDateFormat sdfHora = new SimpleDateFormat("HH:mm", Locale.getDefault());
+                horaFim = sdfHora.format(maquina.getHora_Fim());
             }
 
-            // Calcular duração
-            String duracao = "Não calculável";
-            if (maquina.getHora_Inicio() != null && maquina.getHora_Fim() != null) {
-                long diff = maquina.getHora_Fim().getTime() - maquina.getHora_Inicio().getTime();
-                long diffMinutes = diff / (60 * 1000);
-                long diffHours = diffMinutes / 60;
-                long remainingMinutes = diffMinutes % 60;
-
-                if (diffHours > 0) {
-                    duracao = String.format(Locale.getDefault(), "%dh %02dmin", diffHours, remainingMinutes);
-                } else {
-                    duracao = String.format(Locale.getDefault(), "%dmin", diffMinutes);
-                }
-            }
-
-            String detalhes = "ID da máquina: " + (maquina.getId_maquina() != null ? maquina.getId_maquina() : "-") +
-                    "\nNome da máquina: " + nomeMaquinaModal +
-                    "\nCódigo Colaborador: " + (maquina.getId_usuario() != null ? maquina.getId_usuario() : "-") +
+            String detalhes = "ID: " + (maquina.getId() != null ? maquina.getId() : "-") +
+                    "\nID da máquina: " + maquina.getId_maquina() +
+                    "\nID do usuário: " + maquina.getId_usuario() +
                     "\nSetor: " + (maquina.getDes_setor() != null ? maquina.getDes_setor() : "-") +
                     "\nDescrição: " + (maquina.getDes_parada() != null ? maquina.getDes_parada() : "-") +
-                    "\nData: " + dataFormatada +
+                    "\nData: " + dataDetalhe +
                     "\nHora Início: " + horaInicio +
-                    "\nHora Término: " + horaFim +
-                    "\nDuração: " + duracao;
+                    "\nHora Fim: " + horaFim;
 
             new AlertDialog.Builder(context)
                     .setTitle("Detalhes da Parada")

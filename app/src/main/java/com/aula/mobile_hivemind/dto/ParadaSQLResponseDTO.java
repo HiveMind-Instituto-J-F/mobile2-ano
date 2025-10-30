@@ -6,6 +6,9 @@ public class ParadaSQLResponseDTO {
     @SerializedName("id_registro_paradas")
     private Integer id_registro_paradas;
 
+    @SerializedName("id_manutencao")
+    private Integer id_manutencao;
+
     @SerializedName("id_maquina")
     private Integer id_maquina;
 
@@ -30,6 +33,14 @@ public class ParadaSQLResponseDTO {
     // Getters e Setters
     public Integer getId_registro_paradas() { return id_registro_paradas; }
     public void setId_registro_paradas(Integer id_registro_paradas) { this.id_registro_paradas = id_registro_paradas; }
+
+    public Integer getId_manutencao() {
+        return id_manutencao;
+    }
+
+    public void setId_manutencao(Integer id_manutencao) {
+        this.id_manutencao = id_manutencao;
+    }
 
     public Integer getId_maquina() { return id_maquina; }
     public void setId_maquina(Integer id_maquina) { this.id_maquina = id_maquina; }

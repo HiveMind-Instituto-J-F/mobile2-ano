@@ -19,6 +19,8 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.NavController;
+import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -69,6 +71,7 @@ public class HomeFragment extends Fragment {
     private String userEmail;
     private String userType;
     private String userSetor;
+    private int userId;
     private ShapeableImageView avatar;
     private SqlApiService sqlApiService;
     private BottomSheetDialog bottomSheetDialog;
@@ -142,6 +145,7 @@ public class HomeFragment extends Fragment {
         }
 
         userEmail = sharedPreferences.getString("user_email", null);
+        userId = sharedPreferences.getInt("user_id", 0);
 
         if (userEmail != null && !userEmail.isEmpty()) {
             db.collection("trabalhadores")
@@ -159,7 +163,7 @@ public class HomeFragment extends Fragment {
                                         userType = "regular";
                                         break;
                                     case "engenheiro":
-                                        userType = "MOP";
+                                        userType = "man";
                                         break;
                                     case "supervisor":
                                         userType = "RH";
@@ -262,18 +266,6 @@ public class HomeFragment extends Fragment {
         // Buscar nome da máquina pelo ID
         buscarNomeMaquinaPorId(parada.getId_maquina(), txtNomeMaquina);
 
-        Button btnFinalizarParada = modalView.findViewById(R.id.btnFinalizarParada);
-        if (btnFinalizarParada != null && "MOP".equals(userType)) { // Engenheiro
-            btnFinalizarParada.setVisibility(View.VISIBLE);
-            btnFinalizarParada.setOnClickListener(v -> {
-                // Converter Parada para RegistroParadaResponseDTO
-                RegistroParadaResponseDTO paradaMongo = converterParaRegistroParadaDTO(parada);
-                finalizarParada(paradaMongo);
-            });
-        } else {
-            btnFinalizarParada.setVisibility(View.GONE);
-        }
-
         BottomSheetDialog bottomSheetDialog = new BottomSheetDialog(requireContext());
         bottomSheetDialog.setContentView(modalView);
         bottomSheetDialog.show();
@@ -281,6 +273,17 @@ public class HomeFragment extends Fragment {
         ImageButton btnFechar = modalView.findViewById(R.id.btnFechar);
         if (btnFechar != null) {
             btnFechar.setOnClickListener(v -> bottomSheetDialog.dismiss());
+        }
+
+        Button btnFinalizarParada = modalView.findViewById(R.id.btnManutencao);
+        if (btnFinalizarParada != null && "man".equals(userType)) { // Engenheiro
+            btnFinalizarParada.setVisibility(View.VISIBLE);
+            btnFinalizarParada.setOnClickListener(v -> {
+                bottomSheetDialog.dismiss();
+                finalizarParada(parada);
+            });
+        } else {
+            btnFinalizarParada.setVisibility(View.GONE);
         }
     }
 
@@ -548,86 +551,34 @@ public class HomeFragment extends Fragment {
         return filteredList;
     }
 
-    private void finalizarParada(RegistroParadaResponseDTO paradaMongo) {
-        new AlertDialog.Builder(requireContext())
-                .setTitle("Finalizar Parada")
-                .setMessage("Tem certeza que deseja finalizar esta parada?")
-                .setPositiveButton("Sim", (dialog, which) -> {
-                    processarFinalizacao(paradaMongo);
-                })
-                .setNegativeButton("Cancelar", null)
-                .show();
+    public void finalizarParada(Parada parada) {
+        if (!"man".equals(userType)) {
+            Toast.makeText(getContext(), "Acesso restrito a engenheiros.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        Bundle bundle = new Bundle();
+        bundle.putInt("idMaquina", parada.getId_maquina());
+        bundle.putInt("codigoColaborador", parada.getId_usuario());
+        bundle.putString("setor", parada.getDes_setor());
+        bundle.putString("descricaoParada", parada.getDes_parada());
+        bundle.putInt("userId", userId);
+
+        // ✅ ENVIAR DATA E HORÁRIOS DA PARADA ORIGINAL
+        bundle.putString("dataParada", formatarData(parada.getDt_parada()));
+        bundle.putSerializable("horaInicio", parada.getHora_Inicio());
+        bundle.putSerializable("horaFim", parada.getHora_Fim());
+
+        // Passar o ID do MongoDB também
+        bundle.putString("idMongo", parada.getId());
+
+        NavController navController = Navigation.findNavController(requireActivity(), R.id.nav_host_fragment_activity_main);
+        navController.navigate(R.id.maintenanceFragment, bundle);
     }
 
-    private void processarFinalizacao(RegistroParadaResponseDTO paradaMongo) {
-        ParadaSQLRequestDTO paradaSQL = new ParadaSQLRequestDTO(paradaMongo);
-
-        ProgressDialog progressDialog = new ProgressDialog(requireContext());
-        progressDialog.setMessage("Finalizando parada...");
-        progressDialog.setCancelable(false);
-        progressDialog.show();
-
-        Call<ResponseBody> call = sqlApiService.salvarParadaSQL(paradaSQL);
-        call.enqueue(new Callback<ResponseBody>() {
-            @Override
-            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
-                progressDialog.dismiss();
-                if (response.isSuccessful()) {
-                    excluirParadaMongoDB(paradaMongo.getId());
-                } else {
-                    Toast.makeText(requireContext(), "Erro ao salvar no SQL: " + response.code(), Toast.LENGTH_SHORT).show();
-                }
-            }
-
-            @Override
-            public void onFailure(Call<ResponseBody> call, Throwable t) {
-                progressDialog.dismiss();
-                Toast.makeText(requireContext(), "Falha na conexão SQL: " + t.getMessage(), Toast.LENGTH_SHORT).show();
-            }
-        });
-    }
-
-    private void excluirParadaMongoDB(String idMongo) {
-        ProgressDialog progressDialog = new ProgressDialog(requireContext());
-        progressDialog.setMessage("Excluindo do sistema...");
-        progressDialog.setCancelable(false);
-        progressDialog.show();
-
-        Call<ResponseBody> call = apiService.excluirRegistro(idMongo);
-        call.enqueue(new Callback<ResponseBody>() {
-            @Override
-            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
-                progressDialog.dismiss();
-
-                if (response.isSuccessful()) {
-                    if (bottomSheetDialog != null && bottomSheetDialog.isShowing()) {
-                        bottomSheetDialog.dismiss();
-                    }
-                    Toast.makeText(requireContext(), "Parada finalizada com sucesso!", Toast.LENGTH_SHORT).show();
-                    carregarParadas();
-                } else {
-                    Toast.makeText(requireContext(), "Erro ao excluir do MongoDB: " + response.code(), Toast.LENGTH_SHORT).show();
-                }
-            }
-
-            @Override
-            public void onFailure(Call<ResponseBody> call, Throwable t) {
-                progressDialog.dismiss();
-                Toast.makeText(requireContext(), "Erro ao excluir do MongoDB: " + t.getMessage(), Toast.LENGTH_SHORT).show();
-            }
-        });
-    }
-
-    private RegistroParadaResponseDTO converterParaRegistroParadaDTO(Parada parada) {
-        return new RegistroParadaResponseDTO(
-                parada.getId(),
-                parada.getId_maquina(),
-                parada.getId_usuario(),
-                parada.getDes_parada(),
-                parada.getDes_setor(),
-                parada.getDt_parada(),
-                parada.getHora_Fim(),
-                parada.getHora_Inicio()
-        );
+    private String formatarData(Date data) {
+        if (data == null) return "";
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        return sdf.format(data);
     }
 }

@@ -8,8 +8,10 @@ import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParseException;
+import com.google.gson.JsonSerializer;
 
 import java.lang.reflect.Type;
+import java.sql.Time;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
@@ -24,12 +26,12 @@ import okhttp3.Request;
 import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
+import retrofit2.converter.scalars.ScalarsConverterFactory;
 
 public class RetrofitClient {
     private static final String BASE_URL = "https://api-mongo-kmyg.onrender.com";
     private static final String SQL_BASE_URL = "https://api-2-0mqv.onrender.com";
     private static Retrofit retrofit = null;
-    private static Retrofit sqlRetrofit = null;
     private static SqlApiService sqlApiService = null;
 
     public static ApiService getApiService() {
@@ -78,10 +80,57 @@ public class RetrofitClient {
                     })
                     .build();
 
+            Gson gson = new GsonBuilder()
+                    .setLenient()
+                    .registerTypeAdapter(java.sql.Date.class, (JsonDeserializer<java.sql.Date>) (json, typeOfT, context) -> {
+                        String value = json.getAsString();
+                        List<String> dateFormats = Arrays.asList(
+                                "yyyy-MM-dd",
+                                "MMM dd, yyyy",
+                                "MMM dd, yyyy",
+                                "LLL dd, yyyy"
+                        );
+                        for (String format : dateFormats) {
+                            try {
+                                SimpleDateFormat sdf = new SimpleDateFormat(format, Locale.US);
+                                Date utilDate = sdf.parse(value);
+                                return new java.sql.Date(utilDate.getTime());
+                            } catch (Exception ignored) {}
+                        }
+                        throw new JsonParseException("Formato de data inválido: " + value);
+                    })
+                    .registerTypeAdapter(java.sql.Time.class, (JsonDeserializer<java.sql.Time>) (json, typeOfT, context) -> {
+                        String value = json.getAsString();
+                        List<String> timeFormats = Arrays.asList(
+                                "HH:mm:ss",     // 14:08:00
+                                "hh:mm:ss a",   // 02:08:00 PM
+                                "hh:mm a"       // 02:08 PM
+                        );
+                        for (String format : timeFormats) {
+                            try {
+                                SimpleDateFormat sdf = new SimpleDateFormat(format, Locale.US);
+                                Date utilDate = sdf.parse(value);
+                                return new Time(utilDate.getTime());
+                            } catch (Exception ignored) {}
+                        }
+                        throw new JsonParseException("Formato de hora inválido: " + value);
+                    })
+                    .registerTypeAdapter(java.sql.Date.class, (JsonSerializer<java.sql.Date>) (src, type, context) -> {
+                        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
+                        return new com.google.gson.JsonPrimitive(sdf.format(src));
+                    })
+                    .registerTypeAdapter(java.sql.Time.class, (JsonSerializer<Time>) (src, type, context) -> {
+                        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss", Locale.US);
+                        return new com.google.gson.JsonPrimitive(sdf.format(src));
+                    })
+                    .create();
+
+
             Retrofit retrofit = new Retrofit.Builder()
                     .baseUrl(SQL_BASE_URL)
                     .client(okHttpClient)
-                    .addConverterFactory(GsonConverterFactory.create())
+                    .addConverterFactory(ScalarsConverterFactory.create())
+                    .addConverterFactory(GsonConverterFactory.create(gson))
                     .build();
 
             sqlApiService = retrofit.create(SqlApiService.class);
