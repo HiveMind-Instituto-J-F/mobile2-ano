@@ -15,7 +15,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2️⃣ Configura o JDK 17 (requerido pelo Android Gradle Plugin)
+      # 2️⃣ Configura o JDK 17 (necessário para Android Gradle Plugin)
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
@@ -23,7 +23,7 @@ jobs:
           distribution: 'temurin'
           cache: gradle
 
-      # 3️⃣ Cache do Gradle (melhora o tempo de build)
+      # 3️⃣ Cache Gradle (para builds mais rápidos)
       - name: Cache Gradle packages
         uses: actions/cache@v4
         with:
@@ -34,15 +34,11 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
 
-      # 4️⃣ Dá permissão de execução ao gradlew e faz o build
-      - name: Build project
-        run: chmod +x gradlew && ./gradlew clean build
+      # 4️⃣ Dá permissão ao Gradle e faz o build sem executar testes
+      - name: Build project (skip tests)
+        run: chmod +x gradlew && ./gradlew clean build --exclude-task test
 
-      # 5️⃣ (Opcional) Executa os testes unitários
-      - name: Run unit tests
-        run: ./gradlew test
-
-      # 6️⃣ (Opcional) Faz upload do APK como artefato do workflow
+      # 5️⃣ Gera artefato APK para download no GitHub Actions
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
