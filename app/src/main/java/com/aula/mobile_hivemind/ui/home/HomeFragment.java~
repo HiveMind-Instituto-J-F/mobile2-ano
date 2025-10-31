@@ -595,11 +595,9 @@ public class HomeFragment extends Fragment {
         return sdf.format(data);
     }
 
-    private String formatarHora(Date date) {
-        if (date == null) return "";
-
-        // Formata apenas a hora, ignorando a data
+    private String formatarHora(Time time){
+        if (time == null) return "";
         SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss", Locale.getDefault());
-        return sdf.format(date);
+        return sdf.format(time);
     }
 }

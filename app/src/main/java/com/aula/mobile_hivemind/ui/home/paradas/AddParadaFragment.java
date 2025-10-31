@@ -10,10 +10,8 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.ImageButton;
-import android.widget.TimePicker;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -42,6 +40,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
 
+import java.sql.Time;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -103,6 +102,8 @@ public class AddParadaFragment extends Fragment {
     }
 
     private void initViews(View view) {
+        Bundle bundle = getArguments();
+
         editIdMaquina = view.findViewById(R.id.editIdMaquina);
         editNomeMaquina = view.findViewById(R.id.editNomeMaquina);
         editIdUsuario = view.findViewById(R.id.editCodigoColaborador);
@@ -124,6 +125,12 @@ public class AddParadaFragment extends Fragment {
         if (textInputLayoutHoraFim != null) {
             editTextHoraFim = textInputLayoutHoraFim.findViewById(R.id.editTextHoraFim);
         }
+
+        if (bundle != null && bundle.containsKey("userId")) {
+            int userId = bundle.getInt("userId", 0);
+            editIdUsuario.setText(String.valueOf(userId));
+        }
+
 
         btnAdicionarParada = view.findViewById(R.id.btnAdicionarParada);
         btnBuscarMaquina = view.findViewById(R.id.btnBuscarMaquina);

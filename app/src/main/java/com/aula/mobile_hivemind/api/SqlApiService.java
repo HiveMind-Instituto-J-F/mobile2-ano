@@ -26,8 +26,8 @@ public interface SqlApiService {
     @GET("api/trabalhador/listar")
     Call<List<TrabalhadorResponseDTO>> listarTrabalhadores();
 
-    @POST("api/registro/inserir")
-    Call<ResponseBody> salvarParadaSQL(@Body ParadaSQLRequestDTO paradaSQL);
+    @POST("api/registro/inserirProcedure")
+    Call<ResponseBody> inserirParada(@Body ParadaSQLRequestDTO paradaSQL);
 
     @GET("api/registro/listar")
     Call<List<ParadaSQLResponseDTO>> listarTodasParadas();

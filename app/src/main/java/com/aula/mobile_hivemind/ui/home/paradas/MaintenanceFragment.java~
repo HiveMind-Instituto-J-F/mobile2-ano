@@ -299,7 +299,7 @@ public class MaintenanceFragment extends Fragment {
         Log.d("MaintenanceFragment", "ID Máquina: " + idMaquina);
         Log.d("MaintenanceFragment", "ID Usuário: " + idUsuario);
         Log.d("MaintenanceFragment", "Setor: " + setor);
-        Log.d("MaintenanceFragment", "Data Parada: " + dateParada);
+        Log.d("MaintenanceFragment", "Data Parada: " + dataParada);
         Log.d("MaintenanceFragment", "Hora Início: " + horaInicioTime);
         Log.d("MaintenanceFragment", "Hora Fim: " + horaFimTime);
 
