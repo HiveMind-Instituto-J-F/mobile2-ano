@@ -444,7 +444,7 @@ public class MaintenanceFragment extends Fragment {
 
     private void navigateToConfirmation() {
         NavController navController = Navigation.findNavController(requireActivity(), R.id.nav_host_fragment_activity_main);
-        navController.navigate(R.id.confirmationMaintenceFragment);
+        navController.navigate(R.id.confirmation_maintenceFragment);
     }
 
     private int extrairIdManutencao(String responseBody) {

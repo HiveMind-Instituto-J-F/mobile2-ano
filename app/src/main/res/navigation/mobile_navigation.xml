@@ -34,12 +34,6 @@
         tools:layout="@layout/fragment_confirmation" />
 
     <fragment
-        android:id="@+id/confirmationMaintenceFragment"
-        android:name="com.aula.mobile_hivemind.ui.home.paradas.ConfirmationMaintenceFragment"
-        android:label="fragment_confirmation"
-        tools:layout="@layout/fragment_confirmation" />
-
-    <fragment
         android:id="@+id/maintenanceFragment"
         android:name="com.aula.mobile_hivemind.ui.home.paradas.MaintenanceFragment"
         android:label="fragment_maintenance"
@@ -65,4 +59,9 @@
         android:name="com.aula.mobile_hivemind.auth.HistoricoDiarioFragment"
         android:label="Histórico Diário"
         tools:layout="@layout/fragment_historico_diario" />
+    <fragment
+        android:id="@+id/confirmation_maintenceFragment"
+        android:name="com.aula.mobile_hivemind.ui.home.paradas.ConfirmationMaintenceFragment"
+        android:label="fragment_confirmationMaintence"
+        tools:layout="@layout/fragment_confirmation_maintence" />
 </navigation>
