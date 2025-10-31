@@ -10,63 +10,12 @@ on:
     branches: [main]
 
 jobs:
-  react-frontend:
-    name: 🌐 Frontend - React
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./frontend
-
-    steps:
-      - name: 📥 Checkout do código
-        uses: actions/checkout@v4
-
-      - name: 🟢 Instalar Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-
-      - name: 📦 Instalar dependências
-        run: npm install
-
-      - name: ✅ Rodar testes
-        run: npm test -- --watchAll=false
-
-      - name: 🔍 Verificar estilo (ESLint)
-        run: npm run lint
-
-      # - name: ⚙️ Buildar frontend (opcional)
-      #   run: npm run build
-
-  spring-boot-backend:
-    name: 🔧 Backend - Spring Boot
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./backend
-
-    steps:
-      - name: 📥 Checkout do código
-        uses: actions/checkout@v4
-
-      - name: ☕ Instalar Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-
-      - name: 📦 Compilar projeto
-        run: ./mvnw clean install -DskipTests
-
-      - name: ✅ Rodar testes
-        run: ./mvnw test
-
   android-app:
     name: 📱 Mobile - Android
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./mobile
+        working-directory: ./
 
     steps:
       - name: 📥 Checkout do código
