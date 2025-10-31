@@ -22,4 +22,4 @@ jobs:
         cache: gradle
 
     - name: Build project
-      run: cd mobile_hivemind && chmod +x gradlew && ./gradlew build
+      run: chmod +x gradlew && ./gradlew build
