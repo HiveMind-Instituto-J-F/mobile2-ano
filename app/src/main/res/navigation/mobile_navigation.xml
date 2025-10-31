@@ -32,6 +32,13 @@
         android:name="com.aula.mobile_hivemind.ui.home.paradas.ConfirmationFragment"
         android:label="fragment_confirmation"
         tools:layout="@layout/fragment_confirmation" />
+
+    <fragment
+        android:id="@+id/confirmationMaintenceFragment"
+        android:name="com.aula.mobile_hivemind.ui.home.paradas.ConfirmationMaintenceFragment"
+        android:label="fragment_confirmation"
+        tools:layout="@layout/fragment_confirmation" />
+
     <fragment
         android:id="@+id/maintenanceFragment"
         android:name="com.aula.mobile_hivemind.ui.home.paradas.MaintenanceFragment"

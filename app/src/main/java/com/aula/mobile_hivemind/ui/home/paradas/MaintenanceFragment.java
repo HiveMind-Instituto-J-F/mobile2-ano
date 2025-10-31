@@ -359,15 +359,11 @@ public class MaintenanceFragment extends Fragment {
                     Toast.makeText(requireContext(),
                             "Manutenção registrada e parada finalizada! ID: " + idManutencao,
                             Toast.LENGTH_LONG).show();
-
-                    navigateToConfirmationWithData(idManutencao);
-
                 } else {
                     Log.e("MaintenanceFragment", "Erro ao finalizar parada: " + response.code());
                     Toast.makeText(requireContext(),
                             "Manutenção salva (ID: " + idManutencao + "), mas erro ao finalizar parada: " + response.code(),
                             Toast.LENGTH_LONG).show();
-                    navigateToConfirmationWithData(idManutencao);
                 }
             }
 
@@ -378,7 +374,6 @@ public class MaintenanceFragment extends Fragment {
                 Toast.makeText(requireContext(),
                         "Manutenção salva (ID: " + idManutencao + "), mas falha ao finalizar parada: " + t.getMessage(),
                         Toast.LENGTH_LONG).show();
-                navigateToConfirmationWithData(idManutencao);
             }
         });
     }
@@ -447,18 +442,9 @@ public class MaintenanceFragment extends Fragment {
         }
     }
 
-    private void navigateToConfirmationWithData(int idManutencao) {
-        Bundle bundle = new Bundle();
-        bundle.putInt("idManutencao", idManutencao);
-        bundle.putString("mensagem", "Manutenção registrada com sucesso! ID: " + idManutencao);
-
-        NavController navController = Navigation.findNavController(requireActivity(), R.id.nav_host_fragment_activity_main);
-        navController.navigate(R.id.confirmationFragment, bundle);
-    }
-
     private void navigateToConfirmation() {
         NavController navController = Navigation.findNavController(requireActivity(), R.id.nav_host_fragment_activity_main);
-        navController.navigate(R.id.confirmationFragment);
+        navController.navigate(R.id.confirmationMaintenceFragment);
     }
 
     private int extrairIdManutencao(String responseBody) {
