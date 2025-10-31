@@ -20,6 +20,3 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
         cache: gradle
-
-    - name: Build project
-      run: cd mobile_hivemind && chmod +x gradlew && ./gradlew build
