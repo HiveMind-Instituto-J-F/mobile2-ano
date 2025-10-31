@@ -2,6 +2,7 @@ package com.aula.mobile_hivemind.ui.dashboard;
 
 import android.graphics.Color;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,8 +14,9 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.aula.mobile_hivemind.R;
+import com.aula.mobile_hivemind.api.RetrofitClient;
+import com.aula.mobile_hivemind.dto.RegistroParadaResponseDTO;
 import com.aula.mobile_hivemind.databinding.FragmentDashboardBinding;
-
 import com.aula.mobile_hivemind.ui.dashboard.itens.ProgressBarAdapter;
 import com.aula.mobile_hivemind.ui.dashboard.itens.ProgressItem;
 import com.github.mikephil.charting.charts.PieChart;
@@ -24,9 +26,19 @@ import com.github.mikephil.charting.data.PieDataSet;
 import com.github.mikephil.charting.data.PieEntry;
 import com.github.mikephil.charting.formatter.PercentFormatter;
 
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
+import java.time.YearMonth;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class DashboardFragment extends Fragment {
 
@@ -34,6 +46,7 @@ public class DashboardFragment extends Fragment {
     private FragmentDashboardBinding binding;
     private PieChart pieChart;
     private RecyclerView recyclerViewProgressBars;
+    private com.aula.mobile_hivemind.api.ApiService apiService;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -45,60 +58,123 @@ public class DashboardFragment extends Fragment {
         textData = binding.textData;
         txtPorcent = binding.txtPorcent;
 
-        // Referência aos novos gráficos e RecyclerView
+        apiService = RetrofitClient.getApiService();
+
         pieChart = binding.pieChart;
         recyclerViewProgressBars = binding.recyclerViewProgressBars;
 
-        // Atualiza a data para o dia de hoje
-        textData.setText("Mês " + LocalDate.now().getMonthValue() + "/" + LocalDate.now().getYear());
+        atualizarDataAtual();
 
-        // Atualiza os dados do dashboard
         atualizarResumo();
 
-        // Configura e popula o novo gráfico
         setupPieChart();
         setupProgressBars();
 
         return binding.getRoot();
     }
 
-    // Método para buscar os dados do banco e atualizar a interface
+    private void atualizarDataAtual() {
+        LocalDate hoje = LocalDate.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMMM 'de' yyyy", new Locale("pt", "BR"));
+        String mesAnoFormatado = hoje.format(formatter);
+
+        mesAnoFormatado = mesAnoFormatado.substring(0, 1).toUpperCase() + mesAnoFormatado.substring(1);
+
+        textData.setText(mesAnoFormatado);
+    }
+
     private void atualizarResumo() {
-        // Supondo que você tenha métodos que retornam a quantidade de paradas
-        int paradasDiaAnterior = buscarParadasDoDiaAnterior(); // implementar
-        int paradasDiaAtual = buscarParadasDoDiaAtual();       // implementar
+        buscarParadasDoMesAtual(new ParadasCallback() {
+            @Override
+            public void onParadasLoaded(int paradasMesAtual, int paradasMesAnterior) {
+                textResumoNumero.setText(String.valueOf(paradasMesAtual));
 
-        // Atualiza o número total de paradas
-        textResumoNumero.setText(String.valueOf(paradasDiaAtual));
+                double porcentagem;
+                if (paradasMesAnterior != 0) {
+                    porcentagem = ((double)(paradasMesAtual - paradasMesAnterior) / paradasMesAnterior) * 100;
+                } else {
+                    porcentagem = paradasMesAtual > 0 ? 100 : 0;
+                }
 
-        // Calcula a variação em porcentagem
-        double porcentagem;
-        if (paradasDiaAnterior != 0) {
-            porcentagem = ((double)(paradasDiaAtual - paradasDiaAnterior) / paradasDiaAnterior) * 100;
-        } else {
-            porcentagem = paradasDiaAtual * 100; // evita divisão por zero
-        }
+                if (porcentagem >= 0) {
+                    txtPorcent.setText("cerca de " + String.format("%.1f%%", porcentagem) + " a mais em relação ao mês anterior");
+                } else {
+                    txtPorcent.setText("cerca de " + String.format("%.1f%%", Math.abs(porcentagem)) + " a menos em relação ao mês anterior");
+                }
+            }
 
-        // Formata e atualiza o TextView
-        if (porcentagem >= 0) {
-            txtPorcent.setText("cerca de " + String.format("%.1f%%", porcentagem) + " a mais em relação ao dia anterior");
-        } else {
-            txtPorcent.setText("cerca de " +String.format("%.1f%%", porcentagem) + " a menos em relação ao dia anterior");
-        }
+            @Override
+            public void onError(String error) {
+                Log.e("DashboardFragment", "Erro ao carregar paradas: " + error);
+                textResumoNumero.setText("0");
+                txtPorcent.setText("Erro ao carregar dados");
+            }
+        });
     }
 
-    // Exemplos de métodos fictícios de busca do banco
-    private int buscarParadasDoDiaAnterior() {
-        // Aqui você faria a query no banco para pegar o total de paradas do dia anterior
-        return 10; // apenas exemplo
+    interface ParadasCallback {
+        void onParadasLoaded(int paradasMesAtual, int paradasMesAnterior);
+        void onError(String error);
     }
 
-    private int buscarParadasDoDiaAtual() {
-        // Aqui você faria a query no banco para pegar o total de paradas do dia atual
-        return 12; // apenas exemplo
+    private void buscarParadasDoMesAtual(ParadasCallback callback) {
+        Call<List<RegistroParadaResponseDTO>> call = apiService.getAllRegistros();
+        call.enqueue(new Callback<List<RegistroParadaResponseDTO>>() {
+            @Override
+            public void onResponse(Call<List<RegistroParadaResponseDTO>> call, Response<List<RegistroParadaResponseDTO>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    List<RegistroParadaResponseDTO> todasParadas = response.body();
+
+                    Calendar cal = Calendar.getInstance();
+                    int mesAtual = cal.get(Calendar.MONTH);
+                    int anoAtual = cal.get(Calendar.YEAR);
+
+                    cal.add(Calendar.MONTH, -1);
+                    int mesAnterior = cal.get(Calendar.MONTH);
+                    int anoAnterior = cal.get(Calendar.YEAR);
+
+                    int contadorMesAtual = 0;
+                    int contadorMesAnterior = 0;
+
+                    for (RegistroParadaResponseDTO parada : todasParadas) {
+                        try {
+                            if (parada.getDt_parada() != null) {
+                                Date dataParadaDate = parada.getDt_parada();
+                                Calendar dataParadaCal = Calendar.getInstance();
+                                dataParadaCal.setTime(dataParadaDate);
+
+                                int mesParada = dataParadaCal.get(Calendar.MONTH);
+                                int anoParada = dataParadaCal.get(Calendar.YEAR);
+
+                                // Verificar se é do mês atual
+                                if (mesParada == mesAtual && anoParada == anoAtual) {
+                                    contadorMesAtual++;
+                                }
+                                // Verificar se é do mês anterior
+                                else if (mesParada == mesAnterior && anoParada == anoAnterior) {
+                                    contadorMesAnterior++;
+                                }
+                            }
+                        } catch (Exception e) {
+                            Log.e("DashboardFragment", "Erro ao processar data da parada ID: " + parada.getId(), e);
+                        }
+                    }
+
+                    Log.d("DashboardFragment", "Paradas mês atual: " + contadorMesAtual + ", mês anterior: " + contadorMesAnterior);
+                    callback.onParadasLoaded(contadorMesAtual, contadorMesAnterior);
+
+                } else {
+                    callback.onError("Erro na resposta: " + response.code());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<RegistroParadaResponseDTO>> call, Throwable t) {
+                callback.onError("Falha na conexão: " + t.getMessage());
+            }
+        });
     }
 
-    // Configura o gráfico de rosca
     private void setupPieChart() {
         // Dados fictícios baseados na imagem
         ArrayList<PieEntry> entries = new ArrayList<>();
@@ -150,7 +226,6 @@ public class DashboardFragment extends Fragment {
         pieChart.invalidate(); // Atualiza o gráfico
     }
 
-    // Configura as barras de progresso no RecyclerView
     private void setupProgressBars() {
         List<ProgressItem> progressItems = new ArrayList<>();
         // Dados fictícios baseados na imagem
@@ -165,5 +240,11 @@ public class DashboardFragment extends Fragment {
         // Define o adapter com os dados fictícios
         ProgressBarAdapter adapter = new ProgressBarAdapter(progressItems);
         recyclerViewProgressBars.setAdapter(adapter);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        atualizarResumo();
     }
 }

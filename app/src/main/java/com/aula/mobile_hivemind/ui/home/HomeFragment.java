@@ -1,11 +1,17 @@
 package com.aula.mobile_hivemind.ui.home;
 
+import android.app.AlertDialog;
+import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
-import android.util.Log;
+import android.util.Base64;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -13,28 +19,42 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.NavController;
+import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.aula.mobile_hivemind.MainActivity;
 import com.aula.mobile_hivemind.R;
-import com.aula.mobile_hivemind.api.mongo.RetrofitClient;
-import com.aula.mobile_hivemind.api.mongo.ApiServiceMongo;
-import com.aula.mobile_hivemind.api.sql.ApiServiceSQL;
-import com.aula.mobile_hivemind.dto.mongo.RegistroParadaResponseDTO;
-import com.aula.mobile_hivemind.dto.sql.RegistroParadaRequestDTO;
+import com.aula.mobile_hivemind.api.RetrofitClient;
+import com.aula.mobile_hivemind.api.SqlApiService;
+import com.aula.mobile_hivemind.dto.MaquinaResponseDTO;
+import com.aula.mobile_hivemind.dto.ParadaSQLRequestDTO;
+import com.aula.mobile_hivemind.dto.RegistroParadaResponseDTO;
 import com.aula.mobile_hivemind.recyclerViewParadas.Parada;
 import com.aula.mobile_hivemind.recyclerViewParadas.ParadaAdapter;
+import com.bumptech.glide.Glide;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
+import com.google.android.material.imageview.ShapeableImageView;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.gson.Gson;
 
+import java.sql.Time;
+import java.text.SimpleDateFormat;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
+import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -49,14 +69,17 @@ public class HomeFragment extends Fragment {
 
     private List<Parada> paradasList;
     private List<Parada> allParadasList;
-    private ApiServiceMongo apiServiceMongo;
-    private ApiServiceSQL apiServiceSQL;
+    private com.aula.mobile_hivemind.api.ApiService apiService;
+
     private FirebaseFirestore db;
     private SharedPreferences sharedPreferences;
     private String userEmail;
     private String userType;
     private String userSetor;
-    private RegistroMapper registroMapper;
+    private int userId;
+    private ShapeableImageView avatar;
+    private SqlApiService sqlApiService;
+    private BottomSheetDialog bottomSheetDialog;
 
     @Nullable
     @Override
@@ -69,16 +92,22 @@ public class HomeFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        sharedPreferences = requireContext().getSharedPreferences("ProfilePrefs", 0);
+
+        avatar = view.findViewById(R.id.imageView3);
+
+        carregarImagemPerfil();
+
         filtrarParadas = view.findViewById(R.id.filterButton);
         chipGroupSetores = view.findViewById(R.id.chipGroupSetores);
         recyclerViewParadas = view.findViewById(R.id.recyclerViewParadas);
 
         // Inicializar API Service
-        apiServiceMongo = RetrofitClient.getApiService();
+        apiService = RetrofitClient.getApiService();
+        sqlApiService = RetrofitClient.getSqlApiService();
 
         // Inicializar Firestore e SharedPreferences
         db = FirebaseFirestore.getInstance();
-        sharedPreferences = requireContext().getSharedPreferences("ProfilePrefs", 0);
 
         // Inicializar listas
         paradasList = new ArrayList<>();
@@ -86,7 +115,7 @@ public class HomeFragment extends Fragment {
 
         // Configurar RecyclerView
         recyclerViewParadas.setLayoutManager(new LinearLayoutManager(getContext()));
-        paradaAdapter = new ParadaAdapter(paradasList);
+        paradaAdapter = new ParadaAdapter(paradasList, sqlApiService);
 
         paradaAdapter.setOnItemClickListener(parada -> {
             abrirModalParada(parada);
@@ -94,13 +123,11 @@ public class HomeFragment extends Fragment {
 
         recyclerViewParadas.setAdapter(paradaAdapter);
 
-        // 🔧 OBTER INFORMAÇÕES DO USUÁRIO PRIMEIRO
         obterInformacoesUsuarioECarregarParadas();
 
         filtrarParadas.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // 🔧 SE FOR OPERADOR, NÃO MOSTRA FILTRO (APENAS SEU SETOR)
                 if ("regular".equals(userType)) {
                     Toast.makeText(getContext(), "Operador: Visualizando apenas paradas do setor " + userSetor, Toast.LENGTH_SHORT).show();
                     return;
@@ -118,13 +145,12 @@ public class HomeFragment extends Fragment {
     }
 
     private void obterInformacoesUsuarioECarregarParadas() {
-        // 🔧 PRIMEIRO TENTA OBTER O USER_TYPE DA MAIN ACTIVITY
         if (getActivity() instanceof MainActivity) {
             userType = ((MainActivity) getActivity()).getUserType();
-            Log.d("HomeFragment", "UserType da MainActivity: " + userType);
         }
 
         userEmail = sharedPreferences.getString("user_email", null);
+        userId = sharedPreferences.getInt("user_id", 0);
 
         if (userEmail != null && !userEmail.isEmpty()) {
             db.collection("trabalhadores")
@@ -136,14 +162,13 @@ public class HomeFragment extends Fragment {
                             String tipoPerfilOriginal = task.getResult().getDocuments().get(0).getString("tipo_perfil");
                             userSetor = task.getResult().getDocuments().get(0).getString("setor");
 
-                            // 🔧 SE USER_TYPE NÃO VEIO DA MAIN ACTIVITY, MAPEAR AQUI
                             if (userType == null && tipoPerfilOriginal != null) {
                                 switch (tipoPerfilOriginal.toLowerCase()) {
                                     case "operador":
                                         userType = "regular";
                                         break;
                                     case "engenheiro":
-                                        userType = "MOP";
+                                        userType = "man";
                                         break;
                                     case "supervisor":
                                         userType = "RH";
@@ -153,24 +178,15 @@ public class HomeFragment extends Fragment {
                                 }
                             }
 
-                            Log.d("HomeFragment", "Usuário: " + userEmail + ", Tipo: " + userType + ", Setor: " + userSetor);
-
-                            // 🔧 AGORA CARREGAR PARADAS COM FILTRO APROPRIADO
                             carregarParadas();
-
                         } else {
-                            Log.e("HomeFragment", "Usuário não encontrado no Firestore");
-                            // 🔧 SE NÃO ENCONTROU NO FIRESTORE, USA O USER_TYPE DA MAIN ACTIVITY
                             carregarParadas();
                         }
                     })
                     .addOnFailureListener(e -> {
-                        Log.e("HomeFragment", "Erro ao buscar usuário: " + e.getMessage());
-                        // 🔧 EM CASO DE ERRO, USA O USER_TYPE DA MAIN ACTIVITY
                         carregarParadas();
                     });
         } else {
-            Log.e("HomeFragment", "Email do usuário não disponível");
             carregarParadas();
         }
     }
@@ -182,24 +198,78 @@ public class HomeFragment extends Fragment {
             ((MainActivity) getActivity()).setFabVisibility(true);
             ((MainActivity) getActivity()).setBottomNavigationVisibility(true);
         }
+
+        carregarImagemPerfil();
+    }
+
+    private void carregarImagemPerfil() {
+        if (avatar == null) return;
+
+        SharedPreferences sharedPreferences = requireContext().getSharedPreferences("ProfilePrefs", Context.MODE_PRIVATE);
+        String userEmail = sharedPreferences.getString("user_email", null);
+        if (userEmail == null) {
+            avatar.setImageResource(R.drawable.img);
+            return;
+        }
+
+        String cloudinaryUrlKey = "cloudinary_url_" + userEmail.hashCode();
+        String profileImageKey = "profile_image_" + userEmail.hashCode();
+
+        String cloudinaryUrl = sharedPreferences.getString(cloudinaryUrlKey, null);
+        String encodedImage = sharedPreferences.getString(profileImageKey, null);
+
+        if (cloudinaryUrl != null && !cloudinaryUrl.isEmpty()) {
+            Glide.with(requireContext())
+                    .load(cloudinaryUrl)
+                    .circleCrop()
+                    .placeholder(R.drawable.img)
+                    .error(R.drawable.img)
+                    .into(avatar);
+        } else if (encodedImage != null && !encodedImage.isEmpty()) {
+            byte[] byteArray = Base64.decode(encodedImage, Base64.DEFAULT);
+            Bitmap bitmap = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.length);
+            Glide.with(requireContext())
+                    .load(bitmap)
+                    .circleCrop()
+                    .placeholder(R.drawable.img)
+                    .into(avatar);
+        } else {
+            avatar.setImageResource(R.drawable.img);
+        }
     }
 
     private void abrirModalParada(Parada parada) {
         View modalView = LayoutInflater.from(requireContext()).inflate(R.layout.modal_parada, null);
 
+        // Buscar todas as TextViews
         TextView txtIdMaquina = modalView.findViewById(R.id.txtIdMaquina);
         TextView txtCodigoColaborador = modalView.findViewById(R.id.txtCodigoColaborador);
         TextView txtNomeMaquina = modalView.findViewById(R.id.txtNomeMaquina);
         TextView txtSetor = modalView.findViewById(R.id.txtSetor);
         TextView txtDataParada = modalView.findViewById(R.id.txtData);
+        TextView txtHoraInicio = modalView.findViewById(R.id.txtHoraInicio);
+        TextView txtHoraFim = modalView.findViewById(R.id.txtHoraFim);
+        TextView txtDuracao = modalView.findViewById(R.id.txtDuracao);
         TextView txtDescricaoParada = modalView.findViewById(R.id.txtDescricao);
 
-        txtIdMaquina.setText(String.valueOf(parada.getIdMaquina()));
-        txtCodigoColaborador.setText(String.valueOf(parada.getCodigoColaborador()));
-        txtNomeMaquina.setText(parada.getNomeMaquina());
-        txtSetor.setText(parada.getSetor());
-        txtDataParada.setText(parada.getDataParada());
-        txtDescricaoParada.setText(parada.getDescricaoParada());
+        // Define os valores básicos
+        txtIdMaquina.setText(parada.getId_maquina() != null ? String.valueOf(parada.getId_maquina()) : "Não informado");
+        txtCodigoColaborador.setText(parada.getId_usuario() != null ? String.valueOf(parada.getId_usuario()) : "Não informado");
+        txtSetor.setText(parada.getDes_setor() != null ? parada.getDes_setor() : "Não informado");
+        if (parada.getDt_parada() != null) {
+            SimpleDateFormat dateFormat = new SimpleDateFormat("dd, MMM yyyy", Locale.getDefault());
+            String dataFormatada = dateFormat.format(parada.getDt_parada());
+            txtDataParada.setText(dataFormatada);
+        } else {
+            txtDataParada.setText("Não informado");
+        }
+        txtDescricaoParada.setText(parada.getDes_parada() != null ? parada.getDes_parada() : "Não informado");
+
+        // Processar horas e duração
+        processarHorasEDuracao(parada, txtHoraInicio, txtHoraFim, txtDuracao);
+
+        // Buscar nome da máquina pelo ID
+        buscarNomeMaquinaPorId(parada.getId_maquina(), txtNomeMaquina);
 
         BottomSheetDialog bottomSheetDialog = new BottomSheetDialog(requireContext());
         bottomSheetDialog.setContentView(modalView);
@@ -209,10 +279,131 @@ public class HomeFragment extends Fragment {
         if (btnFechar != null) {
             btnFechar.setOnClickListener(v -> bottomSheetDialog.dismiss());
         }
+
+        Button btnFinalizarParada = modalView.findViewById(R.id.btnManutencao);
+        if (btnFinalizarParada != null && "man".equals(userType)) { // Engenheiro
+            btnFinalizarParada.setVisibility(View.VISIBLE);
+            btnFinalizarParada.setOnClickListener(v -> {
+                bottomSheetDialog.dismiss();
+                finalizarParada(parada);
+            });
+        } else {
+            btnFinalizarParada.setVisibility(View.GONE);
+        }
+    }
+
+    private void processarHorasEDuracao(Parada parada, TextView txtHoraInicio, TextView txtHoraFim, TextView txtDuracao) {
+        try {
+            if (parada.getHora_Inicio() != null) {
+                // Converte Date para Instant
+                Instant instantInicio = parada.getHora_Inicio().toInstant();
+                // Formata mantendo em UTC
+                String horaInicio = instantInicio.atZone(ZoneOffset.UTC)
+                        .format(DateTimeFormatter.ofPattern("HH:mm"));
+                txtHoraInicio.setText(horaInicio);
+            } else {
+                txtHoraInicio.setText("Não informado");
+            }
+
+            if (parada.getHora_Fim() != null) {
+                Instant instantFim = parada.getHora_Fim().toInstant();
+                String horaFim = instantFim.atZone(ZoneOffset.UTC)
+                        .format(DateTimeFormatter.ofPattern("HH:mm"));
+                txtHoraFim.setText(horaFim);
+            } else {
+                txtHoraFim.setText("Não informado");
+            }
+
+            if (parada.getHora_Inicio() != null && parada.getHora_Fim() != null) {
+                Duration duration = Duration.between(
+                        parada.getHora_Inicio().toInstant(),
+                        parada.getHora_Fim().toInstant()
+                );
+
+                long diffMinutes = duration.toMinutes();
+                long diffHours = diffMinutes / 60;
+                long remainingMinutes = diffMinutes % 60;
+
+                String duracao;
+                if (diffHours > 0) {
+                    duracao = String.format(Locale.getDefault(), "%dh %02dmin", diffHours, remainingMinutes);
+                } else {
+                    duracao = String.format(Locale.getDefault(), "%dmin", diffMinutes);
+                }
+                txtDuracao.setText(duracao);
+            } else {
+                txtDuracao.setText("Não calculável");
+            }
+
+        } catch (Exception e) {
+            txtHoraInicio.setText("Erro");
+            txtHoraFim.setText("Erro");
+            txtDuracao.setText("Erro");
+        }
+    }
+
+    private void buscarNomeMaquinaPorId(Integer idMaquina, TextView txtNomeMaquina) {
+        if (idMaquina == null) {
+            txtNomeMaquina.setText("ID não informado");
+            return;
+        }
+
+        txtNomeMaquina.setText("Carregando...");
+
+        if (sqlApiService == null) {
+            txtNomeMaquina.setText("Erro de configuração");
+            return;
+        }
+
+        Call<List<MaquinaResponseDTO>> call = sqlApiService.listarMaquinas();
+
+        call.enqueue(new Callback<List<MaquinaResponseDTO>>() {
+            @Override
+            public void onResponse(Call<List<MaquinaResponseDTO>> call, Response<List<MaquinaResponseDTO>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    List<MaquinaResponseDTO> maquinas = response.body();
+
+                    String nomeMaquinaEncontrada = "Máquina não encontrada";
+                    boolean encontrou = false;
+
+                    // Log detalhado de todas as máquinas
+                    for (int i = 0; i < maquinas.size(); i++) {
+                        MaquinaResponseDTO maquina = maquinas.get(i);
+
+                        if (maquina.getId() != null && maquina.getId().equals(idMaquina.longValue())) {
+                            nomeMaquinaEncontrada = maquina.getNome() != null ? maquina.getNome() : "Nome não disponível";
+                            break;
+                        }
+                    }
+
+                    txtNomeMaquina.setText(nomeMaquinaEncontrada);
+
+                } else {
+                    switch (response.code()) {
+                        case 401:
+                            txtNomeMaquina.setText("Erro de autenticação");
+                            break;
+                        case 404:
+                            txtNomeMaquina.setText("API não encontrada");
+                            break;
+                        case 500:
+                            txtNomeMaquina.setText("Erro interno do servidor");
+                            break;
+                        default:
+                            txtNomeMaquina.setText("Erro ao buscar máquina");
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<MaquinaResponseDTO>> call, Throwable t) {
+                txtNomeMaquina.setText("Falha na conexão");
+            }
+        });
     }
 
     private void carregarParadas() {
-        Call<List<RegistroParadaResponseDTO>> call = apiServiceMongo.getAllRegistros();
+        Call<List<RegistroParadaResponseDTO>> call = apiService.getAllRegistros();
         call.enqueue(new Callback<List<RegistroParadaResponseDTO>>() {
             @Override
             public void onResponse(Call<List<RegistroParadaResponseDTO>> call, Response<List<RegistroParadaResponseDTO>> response) {
@@ -226,22 +417,19 @@ public class HomeFragment extends Fragment {
                         allParadasList.add(parada);
                     }
 
-                    // 🔧 APLICAR FILTRO BASEADO NO TIPO DE USUÁRIO
+                    ordenarParadasPorDataEHora(allParadasList);
+
                     aplicarFiltroUsuario();
 
-                    // 🔧 EXTRAIR SETORES APENAS DAS PARADAS FILTRADAS
                     if (!"regular".equals(userType)) {
                         Set<String> setores = new HashSet<>();
                         for (Parada parada : paradasList) {
-                            if (parada.getSetor() != null && !parada.getSetor().isEmpty()) {
-                                setores.add(parada.getSetor());
+                            if (parada.getDes_setor() != null && !parada.getDes_setor().isEmpty()) {
+                                setores.add(parada.getDes_setor());
                             }
                         }
                         addChipsToChipGroup(new ArrayList<>(setores));
                     }
-
-//                    Toast.makeText(getContext(), "Paradas carregadas: " + paradasList.size(), Toast.LENGTH_SHORT).show();
-
                 } else {
 //                    Toast.makeText(getContext(), "Erro ao carregar paradas: " + response.code(), Toast.LENGTH_SHORT).show();
                 }
@@ -254,12 +442,25 @@ public class HomeFragment extends Fragment {
         });
     }
 
+    private void ordenarParadasPorDataEHora(List<Parada> paradas) {
+        paradas.sort((p1, p2) -> {
+            Date d1 = p1.getDt_parada();
+            Date d2 = p2.getDt_parada();
+
+            if (d1 == null && d2 == null) return 0;
+            if (d1 == null) return 1;
+            if (d2 == null) return -1;
+
+            return d2.compareTo(d1);
+        });
+    }
+
     private void aplicarFiltroUsuario() {
         paradasList.clear();
 
         if ("regular".equals(userType)) {
             for (Parada parada : allParadasList) {
-                if (parada.getSetor() != null && parada.getSetor().equals(userSetor)) {
+                if (parada.getDes_setor() != null && parada.getDes_setor().equals(userSetor)) {
                     paradasList.add(parada);
                 }
             }
@@ -267,13 +468,9 @@ public class HomeFragment extends Fragment {
             // Esconder botão de filtro para Operador
             filtrarParadas.setVisibility(View.GONE);
             chipGroupSetores.setVisibility(View.GONE);
-
-            Log.d("HomeFragment", "Operador - Setor: " + userSetor + ", Paradas: " + paradasList.size());
-
         } else {
             paradasList.addAll(allParadasList);
             filtrarParadas.setVisibility(View.VISIBLE);
-            Log.d("HomeFragment", userType + " - Todas as paradas: " + allParadasList.size());
         }
 
         paradaAdapter.notifyDataSetChanged();
@@ -281,12 +478,14 @@ public class HomeFragment extends Fragment {
 
     private Parada converterParaParada(RegistroParadaResponseDTO registro) {
         return new Parada(
-                registro.getId_maquina(),  // idMaquina
-                registro.getNomeMaquina(), // nomeMaquina
-                registro.getId_usuario(),  // códigoColaborador
-                registro.getSetor(),       // setor
-                registro.getDescricao(),    // descricaoParada
-                registro.getDate()        // dataParada
+                registro.getId(),
+                registro.getId_maquina(),
+                registro.getId_usuario(),
+                registro.getDes_parada(),
+                registro.getDes_setor(),
+                registro.getDt_parada(),
+                registro.getHora_Fim(),
+                registro.getHora_Inicio()
         );
     }
 
@@ -358,16 +557,49 @@ public class HomeFragment extends Fragment {
     private List<Parada> filterParadasBySector(String sectorName) {
         List<Parada> filteredList = new ArrayList<>();
         for (Parada parada : allParadasList) {
-            if (sectorName.equals(parada.getSetor())) {
+            if (sectorName.equals(parada.getDes_setor())) {
                 filteredList.add(parada);
             }
         }
         return filteredList;
     }
 
-    public void mesclarApi(String id){
-        RegistroParadaResponseDTO callMongo = apiServiceMongo.getRegistroById(id);
-        RegistroParadaRequestDTO convert = registroMapper.toRegistroParadaRequestDTO(callMongo);
-        apiServiceSQL.criarRegistro(convert);
+    public void finalizarParada(Parada parada) {
+        if (!"man".equals(userType)) {
+            Toast.makeText(getContext(), "Acesso restrito a engenheiros.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        Bundle bundle = new Bundle();
+        bundle.putInt("idMaquina", parada.getId_maquina());
+        bundle.putInt("codigoColaborador", parada.getId_usuario());
+        bundle.putString("setor", parada.getDes_setor());
+        bundle.putString("descricaoParada", parada.getDes_parada());
+        bundle.putInt("userId", userId);
+
+        // ✅ ENVIAR DATA E HORÁRIOS DA PARADA ORIGINAL
+        bundle.putString("dataParada", formatarData(parada.getDt_parada()));
+        bundle.putString("horaInicio", formatarHora(parada.getHora_Inicio()));
+        bundle.putString("horaFim", formatarHora(parada.getHora_Fim()));
+
+        // Passar o ID do MongoDB também
+        bundle.putString("idMongo", parada.getId());
+
+        NavController navController = Navigation.findNavController(requireActivity(), R.id.nav_host_fragment_activity_main);
+        navController.navigate(R.id.maintenanceFragment, bundle);
+    }
+
+    private String formatarData(Date data) {
+        if (data == null) return "";
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        return sdf.format(data);
+    }
+
+    private String formatarHora(Date date) {
+        if (date == null) return "";
+
+        // Formata apenas a hora, ignorando a data
+        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss", Locale.getDefault());
+        return sdf.format(date);
     }
 }

@@ -1,29 +1,53 @@
 package com.aula.mobile_hivemind.ui.home_rh;
 
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.util.Base64;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.aula.mobile_hivemind.MainActivity;
 import com.aula.mobile_hivemind.R;
+import com.aula.mobile_hivemind.api.RetrofitClient;
+import com.aula.mobile_hivemind.dto.RegistroParadaResponseDTO;
 import com.aula.mobile_hivemind.ui.dashboard.itens.ProgressBarAdapter;
 import com.aula.mobile_hivemind.ui.dashboard.itens.ProgressItem;
+import com.bumptech.glide.Glide;
 import com.github.mikephil.charting.charts.PieChart;
 import com.github.mikephil.charting.components.Legend;
 import com.github.mikephil.charting.data.PieData;
 import com.github.mikephil.charting.data.PieDataSet;
 import com.github.mikephil.charting.data.PieEntry;
-import com.github.mikephil.charting.formatter.PercentFormatter;
+import com.github.mikephil.charting.formatter.ValueFormatter;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
+import com.google.android.material.imageview.ShapeableImageView;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class HomeRhFragment extends Fragment {
 
@@ -31,6 +55,15 @@ public class HomeRhFragment extends Fragment {
     private Chip chipTodos;
     private RecyclerView recyclerViewProgressBars;
     private PieChart pieChart;
+    private ShapeableImageView avatar;
+    private SharedPreferences sharedPreferences;
+    private TextView centerText;
+    private com.aula.mobile_hivemind.api.ApiService apiService;
+
+    // Lista para armazenar todos os setores disponíveis
+    private List<String> todosSetores = new ArrayList<>();
+    // Mapa para armazenar contagem de paradas por setor
+    private Map<String, Integer> paradasPorSetor = new HashMap<>();
 
     public HomeRhFragment() {
         // Construtor público vazio requerido
@@ -38,43 +71,156 @@ public class HomeRhFragment extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        // infla o layout
         View root = inflater.inflate(R.layout.fragment_home_rh, container, false);
+
+        // Inicializar API Service
+        apiService = RetrofitClient.getApiService();
 
         // inicializa as views
         pieChart = root.findViewById(R.id.pieChart);
         recyclerViewProgressBars = root.findViewById(R.id.recyclerViewProgressBars);
         chipGroupSetores = root.findViewById(R.id.chipGroupSetores);
+        centerText = root.findViewById(R.id.centerText);
 
-        // configura e popula os dados
-        setupPieChart();
-        setupProgressBars();
-        addChipsToChipGroup(new ArrayList<String>() {{
-            add("Setor A");
-            add("Setor B");
-            add("Setor C");
-            add("Setor D");
-            add("Setor E");
-        }});
+        // Carrega dados reais da API
+        carregarDadosParadas();
 
         return root;
     }
 
-    private void addChipsToChipGroup(List<String> sectors) {
-        // Limpa chips antigos
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+        sharedPreferences = requireContext().getSharedPreferences("ProfilePrefs", 0);
+        avatar = view.findViewById(R.id.imageView3);
+        carregarImagemPerfil();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (getActivity() instanceof MainActivity) {
+            ((MainActivity) getActivity()).setFabVisibility(true);
+            ((MainActivity) getActivity()).setBottomNavigationVisibility(true);
+        }
+        carregarImagemPerfil();
+
+        // Recarregar dados quando o fragment for retomado
+        carregarDadosParadas();
+    }
+
+    private void carregarDadosParadas() {
+        Call<List<RegistroParadaResponseDTO>> call = apiService.getAllRegistros();
+        call.enqueue(new Callback<List<RegistroParadaResponseDTO>>() {
+            @Override
+            public void onResponse(Call<List<RegistroParadaResponseDTO>> call, Response<List<RegistroParadaResponseDTO>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    processarParadasDoDia(response.body());
+                } else {
+                    Log.e("HomeRhFragment", "Erro ao carregar paradas: " + response.code());
+                    // Mostrar dados vazios em caso de erro
+                    mostrarDadosVazios();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<RegistroParadaResponseDTO>> call, Throwable t) {
+                Log.e("HomeRhFragment", "Falha na conexão: " + t.getMessage());
+                mostrarDadosVazios();
+            }
+        });
+    }
+
+    private void processarParadasDoDia(List<RegistroParadaResponseDTO> todasParadas) {
+        paradasPorSetor.clear();
+        todosSetores.clear();
+
+        Calendar hoje = Calendar.getInstance();
+        hoje.set(Calendar.HOUR_OF_DAY, 0);
+        hoje.set(Calendar.MINUTE, 0);
+        hoje.set(Calendar.SECOND, 0);
+        hoje.set(Calendar.MILLISECOND, 0);
+
+        Calendar amanha = (Calendar) hoje.clone();
+        amanha.add(Calendar.DAY_OF_MONTH, 1);
+
+        // Contar paradas por setor no dia atual
+        for (RegistroParadaResponseDTO registro : todasParadas) {
+            try {
+                if (registro.getDt_parada() != null &&
+                        registro.getDes_setor() != null && !registro.getDes_setor().isEmpty()) {
+
+                    Date dataParada = registro.getDt_parada();
+
+                    // Verificar se é do dia atual
+                    if (dataParada.after(hoje.getTime()) && dataParada.before(amanha.getTime())) {
+                        String setor = registro.getDes_setor();
+                        paradasPorSetor.put(setor, paradasPorSetor.getOrDefault(setor, 0) + 1);
+
+                        // Adiciona à lista de setores se não existir
+                        if (!todosSetores.contains(setor)) {
+                            todosSetores.add(setor);
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                Log.e("DashboardFragment", "Erro ao processar parada: " + e.getMessage());
+            }
+        }
+
+        // Atualizar UI com os dados reais
+        atualizarUIComDadosReais();
+    }
+
+    private void atualizarUIComDadosReais() {
+        if (paradasPorSetor.isEmpty()) {
+            mostrarDadosVazios();
+        } else {
+            // Configurar chips com setores reais
+            addChipsToChipGroup(new ArrayList<>(todosSetores));
+
+            // Configurar gráfico e barras de progresso
+            setupPieChart();
+            setupProgressBars();
+        }
+    }
+
+    private void mostrarDadosVazios() {
+        // Mostrar mensagem de nenhuma parada hoje
+        centerText.setText("Nenhuma parada hoje");
+
+        // Limpar chips
         chipGroupSetores.removeAllViews();
 
+        // Mostrar gráfico vazio
+        pieChart.clear();
+        pieChart.setCenterText("0");
+        pieChart.invalidate();
+
+        // Limpar recycler view
+        recyclerViewProgressBars.setAdapter(new ProgressBarAdapter(new ArrayList<>()));
+    }
+
+    private void addChipsToChipGroup(List<String> sectors) {
+        chipGroupSetores.removeAllViews();
+
+        if (sectors.isEmpty()) {
+            return;
+        }
+
         // Chip "Todos"
-        chipTodos = new Chip(getContext(), null, 0);
+        chipTodos = new Chip(getContext());
         chipTodos.setText("Todos");
         chipTodos.setId(View.generateViewId());
         chipTodos.setCheckable(true);
         chipTodos.setClickable(true);
         chipTodos.setChecked(true);
+        chipGroupSetores.addView(chipTodos);
 
-        // Chips para cada setor
+        // Chips para cada setor real
         for (String sectorName : sectors) {
-            Chip chip = new Chip(getContext(), null, 0);
+            Chip chip = new Chip(getContext());
             chip.setText(sectorName);
             chip.setId(View.generateViewId());
             chip.setCheckable(true);
@@ -85,10 +231,9 @@ public class HomeRhFragment extends Fragment {
         // Listener de seleção dos chips
         chipGroupSetores.setOnCheckedStateChangeListener((group, checkedIds) -> {
             if (checkedIds.isEmpty()) {
-                // Nenhum chip → volta para "Todos"
                 chipTodos.setChecked(true);
-                updatePieChart(sectors);          // mostra todos no gráfico
-                updateProgressBars(sectors);      // mostra todos no RecyclerView
+                updatePieChart(new ArrayList<>(sectors));
+                updateProgressBars(new ArrayList<>(sectors));
             } else {
                 List<String> selectedSectors = new ArrayList<>();
 
@@ -100,17 +245,14 @@ public class HomeRhFragment extends Fragment {
                             selectedSectors = new ArrayList<>(sectors);
                             break;
                         } else {
-                            chipTodos.setCheckable(false);
                             selectedSectors.add(name);
                         }
                     }
                 }
 
-                // Atualiza gráfico e recycler com setores filtrados
                 updatePieChart(selectedSectors);
                 updateProgressBars(selectedSectors);
 
-                // Se algum setor foi selecionado → desmarca "Todos"
                 if (!selectedSectors.contains("Todos")) {
                     chipTodos.setChecked(false);
                 }
@@ -119,13 +261,13 @@ public class HomeRhFragment extends Fragment {
     }
 
     private void setupPieChart() {
-        List<ProgressItem> progressItems = getProgressItemsFromDatabase();
+        List<ProgressItem> progressItems = getProgressItemsFromRealData();
         ArrayList<PieEntry> entries = new ArrayList<>();
 
-        float total = 0f;
+        int totalParadas = 0;
         for (ProgressItem item : progressItems) {
             entries.add(new PieEntry(item.getProgress(), item.getLabel()));
-            total += item.getProgress();
+            totalParadas += item.getProgress();
         }
 
         PieDataSet dataSet = new PieDataSet(entries, "");
@@ -146,18 +288,26 @@ public class HomeRhFragment extends Fragment {
         dataSet.setColors(colors);
 
         PieData pieData = new PieData(dataSet);
-        pieData.setValueFormatter(new PercentFormatter(pieChart));
+
+        // Usar formatter para mostrar valores absolutos em vez de porcentagens
+        pieData.setValueFormatter(new ValueFormatter() {
+            @Override
+            public String getFormattedValue(float value) {
+                return String.valueOf((int) value);
+            }
+        });
+
         pieData.setValueTextSize(11f);
         pieData.setValueTextColor(Color.WHITE);
 
         pieChart.setData(pieData);
-        pieChart.setUsePercentValues(true);
+        pieChart.setUsePercentValues(false); // Mostrar valores absolutos
         pieChart.getDescription().setEnabled(false);
         pieChart.setHoleColor(Color.TRANSPARENT);
         pieChart.setHoleRadius(58f);
         pieChart.setTransparentCircleRadius(61f);
         pieChart.setDrawCenterText(true);
-        pieChart.setCenterText("$" + String.format("%.0f", total));
+        pieChart.setCenterText(String.valueOf(totalParadas));
         pieChart.setCenterTextColor(Color.WHITE);
         pieChart.setCenterTextSize(24f);
 
@@ -167,44 +317,37 @@ public class HomeRhFragment extends Fragment {
         pieChart.invalidate();
     }
 
-    // Configura as barras de progresso no RecyclerView
     private void setupProgressBars() {
-        List<ProgressItem> progressItems = getProgressItemsFromDatabase();
-
+        List<ProgressItem> progressItems = getProgressItemsFromRealData();
         recyclerViewProgressBars.setLayoutManager(new LinearLayoutManager(getContext()));
         ProgressBarAdapter adapter = new ProgressBarAdapter(progressItems);
         recyclerViewProgressBars.setAdapter(adapter);
     }
 
     private void updateProgressBars(List<String> filteredSectors) {
-        List<ProgressItem> allItems = getProgressItemsFromDatabase();
+        List<ProgressItem> allItems = getProgressItemsFromRealData();
         List<ProgressItem> filteredItems = new ArrayList<>();
 
-        // Filtra apenas os setores selecionados
         for (ProgressItem item : allItems) {
             if (filteredSectors.contains(item.getLabel())) {
                 filteredItems.add(item);
             }
         }
 
-        // Atualiza RecyclerView
         recyclerViewProgressBars.setLayoutManager(new LinearLayoutManager(getContext()));
         ProgressBarAdapter adapter = new ProgressBarAdapter(filteredItems);
         recyclerViewProgressBars.setAdapter(adapter);
     }
 
-
-
     private void updatePieChart(List<String> filteredSectors) {
-        List<ProgressItem> allItems = getProgressItemsFromDatabase();
+        List<ProgressItem> allItems = getProgressItemsFromRealData();
         ArrayList<PieEntry> entries = new ArrayList<>();
-        float total = 0f;
+        int totalParadas = 0;
 
-        // Filtra apenas os setores selecionados
         for (ProgressItem item : allItems) {
             if (filteredSectors.contains(item.getLabel())) {
                 entries.add(new PieEntry(item.getProgress(), item.getLabel()));
-                total += item.getProgress();
+                totalParadas += item.getProgress();
             }
         }
 
@@ -212,7 +355,6 @@ public class HomeRhFragment extends Fragment {
         dataSet.setSliceSpace(3f);
         dataSet.setSelectionShift(5f);
 
-        // Cores
         ArrayList<Integer> colors = new ArrayList<>();
         colors.add(Color.parseColor("#EF4444"));
         colors.add(Color.parseColor("#EC2B7B"));
@@ -226,34 +368,78 @@ public class HomeRhFragment extends Fragment {
         dataSet.setColors(colors);
 
         PieData pieData = new PieData(dataSet);
-        pieData.setValueFormatter(new PercentFormatter(pieChart));
+        pieData.setValueFormatter(new ValueFormatter() {
+            @Override
+            public String getFormattedValue(float value) {
+                return String.valueOf((int) value);
+            }
+        });
         pieData.setValueTextSize(11f);
         pieData.setValueTextColor(Color.WHITE);
 
         pieChart.setData(pieData);
-        pieChart.setCenterText("$" + String.format("%.0f", total));
+        pieChart.setCenterText(String.valueOf(totalParadas));
         pieChart.invalidate();
     }
 
-    private List<ProgressItem> getProgressItemsFromDatabase() {
+    private List<ProgressItem> getProgressItemsFromRealData() {
         List<ProgressItem> progressItems = new ArrayList<>();
 
-        // Lista manual de setores e progresso
-        String[] setores = {"Setor H", "Setor B", "Setor C", "Setor D", "Setor E"};
-        int[] progressos = {25, 22, 20, 17, 1};
+        if (paradasPorSetor.isEmpty()) {
+            return progressItems;
+        }
 
-        // Lista de cores (vai rotacionar se tiver mais setores que cores)
-        int[] colors = {R.color.red_500, R.color.pink_500, R.color.purple_500, R.color.indigo_500, R.color.blue_500};
+        // Lista de cores
+        int[] colors = {R.color.red_500, R.color.pink_500, R.color.purple_500,
+                R.color.indigo_500, R.color.blue_500, R.color.cyan_500,
+                R.color.teal_500, R.color.green_500, R.color.yellow_500};
 
-        for (int i = 0; i < setores.length; i++) {
-            String nome = setores[i];
-            int progresso = progressos[i];
-            int color = colors[i % colors.length]; // Rotaciona cores
+        int colorIndex = 0;
+        for (Map.Entry<String, Integer> entry : paradasPorSetor.entrySet()) {
+            String setor = entry.getKey();
+            int quantidade = entry.getValue();
+            int color = colors[colorIndex % colors.length];
 
-            progressItems.add(new ProgressItem(nome, progresso, color));
+            progressItems.add(new ProgressItem(setor, quantidade, color));
+            colorIndex++;
         }
 
         return progressItems;
     }
 
+    private void carregarImagemPerfil() {
+        if (avatar == null) return;
+
+        SharedPreferences sharedPreferences = requireContext().getSharedPreferences("ProfilePrefs", Context.MODE_PRIVATE);
+        String userEmail = sharedPreferences.getString("user_email", null);
+        if (userEmail == null) {
+            avatar.setImageResource(R.drawable.img);
+            return;
+        }
+
+        String cloudinaryUrlKey = "cloudinary_url_" + userEmail.hashCode();
+        String profileImageKey = "profile_image_" + userEmail.hashCode();
+
+        String cloudinaryUrl = sharedPreferences.getString(cloudinaryUrlKey, null);
+        String encodedImage = sharedPreferences.getString(profileImageKey, null);
+
+        if (cloudinaryUrl != null && !cloudinaryUrl.isEmpty()) {
+            Glide.with(requireContext())
+                    .load(cloudinaryUrl)
+                    .circleCrop()
+                    .placeholder(R.drawable.img)
+                    .error(R.drawable.img)
+                    .into(avatar);
+        } else if (encodedImage != null && !encodedImage.isEmpty()) {
+            byte[] byteArray = Base64.decode(encodedImage, Base64.DEFAULT);
+            Bitmap bitmap = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.length);
+            Glide.with(requireContext())
+                    .load(bitmap)
+                    .circleCrop()
+                    .placeholder(R.drawable.img)
+                    .into(avatar);
+        } else {
+            avatar.setImageResource(R.drawable.img);
+        }
+    }
 }

@@ -18,7 +18,6 @@ playServicesAuth = "21.4.0"
 playServicesBase = "18.7.2"
 firebaseAuth = "24.0.1"
 firebaseFirestore = "26.0.0"
-firebaseDatabase = "22.0.1"
 
 [libraries]
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -38,7 +37,6 @@ play-services-auth = { module = "com.google.android.gms:play-services-auth", ver
 play-services-base = { group = "com.google.android.gms", name = "play-services-base", version.ref = "playServicesBase" }
 firebase-auth = { group = "com.google.firebase", name = "firebase-auth", version.ref = "firebaseAuth" }
 firebase-firestore = { group = "com.google.firebase", name = "firebase-firestore", version.ref = "firebaseFirestore" }
-firebase-database = { group = "com.google.firebase", name = "firebase-database", version.ref = "firebaseDatabase" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

@@ -9,9 +9,9 @@
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" android:orientation="vertical"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
         android:paddingBottom="24dp">
-
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -22,7 +22,7 @@
             android:paddingBottom="16dp">
 
             <ImageButton
-                android:id="@+id/btnBack"
+                android:id="@+id/btnVoltar"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:clickable="true"
@@ -95,13 +95,26 @@
                 android:id="@+id/editIdMaquina"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
+                android:layout_marginBottom="8dp"
                 android:background="@drawable/bottom_line_drawable"
                 android:hint="Digite aqui"
                 android:inputType="number"
                 android:paddingBottom="8dp"
                 android:textColor="#212121"
                 android:textColorHint="#9E9E9E" />
+
+            <!-- Botão para buscar máquina -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnBuscarMaquina"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end"
+                android:layout_marginBottom="16dp"
+                android:backgroundTint="#6B3EFF"
+                android:text="Buscar Máquina"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                app:cornerRadius="8dp" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -118,11 +131,14 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
                 android:background="@drawable/bottom_line_drawable"
-                android:hint="Escreva aqui"
+                android:hint="Nome será carregado automaticamente"
                 android:inputType="text"
                 android:paddingBottom="8dp"
                 android:textColor="#212121"
-                android:textColorHint="#9E9E9E" />
+                android:textColorHint="#9E9E9E"
+                android:focusable="false"
+                android:clickable="false"
+                android:cursorVisible="false" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -137,13 +153,26 @@
                 android:id="@+id/editCodigoColaborador"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
+                android:layout_marginBottom="8dp"
                 android:background="@drawable/bottom_line_drawable"
                 android:hint="Escreva aqui"
                 android:inputType="number"
                 android:paddingBottom="8dp"
                 android:textColor="#212121"
                 android:textColorHint="#9E9E9E" />
+
+            <!-- Botão para validar colaborador -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnValidarColaborador"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end"
+                android:layout_marginBottom="16dp"
+                android:backgroundTint="#6B3EFF"
+                android:text="Validar Colaborador"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                app:cornerRadius="8dp" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -187,6 +216,7 @@
                 android:textColor="#212121"
                 android:textColorHint="#9E9E9E" />
 
+            <!-- Data da parada -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -199,8 +229,9 @@
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/textInputLayoutDATAPARADA"
                 style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                android:layout_width="376dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
                 app:boxBackgroundMode="outline"
                 app:boxCornerRadiusBottomEnd="16dp"
                 app:boxCornerRadiusBottomStart="16dp"
@@ -208,9 +239,6 @@
                 app:boxCornerRadiusTopStart="16dp"
                 app:boxStrokeColor="#6B3EFF"
                 app:endIconDrawable="@drawable/ic_dropdown"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/txtTitulo"
                 app:startIconDrawable="@drawable/calendar">
 
                 <com.google.android.material.textfield.TextInputEditText
@@ -222,6 +250,71 @@
                     android:textColor="#000000" />
             </com.google.android.material.textfield.TextInputLayout>
 
+            <!-- Hora de início -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:fontFamily="@font/poppins"
+                android:text="Hora de início"
+                android:textColor="#212121"
+                android:textSize="16sp" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/textInputLayoutHoraInicio"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                app:boxBackgroundMode="outline"
+                app:boxCornerRadiusBottomEnd="16dp"
+                app:boxCornerRadiusBottomStart="16dp"
+                app:boxCornerRadiusTopEnd="16dp"
+                app:boxCornerRadiusTopStart="16dp"
+                app:boxStrokeColor="#6B3EFF"
+                app:startIconDrawable="@drawable/ic_clock">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/editTextHoraInicio"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:focusable="false"
+                    android:inputType="none"
+                    android:textColor="#000000" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Hora de término -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:fontFamily="@font/poppins"
+                android:text="Hora de término"
+                android:textColor="#212121"
+                android:textSize="16sp" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/textInputLayoutHoraFim"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                app:boxBackgroundMode="outline"
+                app:boxCornerRadiusBottomEnd="16dp"
+                app:boxCornerRadiusBottomStart="16dp"
+                app:boxCornerRadiusTopEnd="16dp"
+                app:boxCornerRadiusTopStart="16dp"
+                app:boxStrokeColor="#6B3EFF"
+                app:startIconDrawable="@drawable/ic_clock">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/editTextHoraFim"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:focusable="false"
+                    android:inputType="none"
+                    android:textColor="#000000" />
+            </com.google.android.material.textfield.TextInputLayout>
 
         </LinearLayout>
 
@@ -237,7 +330,7 @@
             app:cardElevation="0dp">
 
             <LinearLayout
-                android:layout_width="382dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:elevation="0dp"
                 android:orientation="vertical"
@@ -248,17 +341,20 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:fontFamily="@font/roboto"
-                    android:hint="Resumo das informações"
+                    android:text="Resumo das informações"
                     android:textColor="#212121"
                     android:textSize="16sp"
                     android:textStyle="bold" />
 
-                <LinearLayout
-                    android:layout_width="wrap_content"
+                <TextView
+                    android:id="@+id/textResumoInfo"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal" />
+                    android:layout_marginTop="8dp"
+                    android:fontFamily="@font/roboto"
+                    android:text="Nenhuma informação carregada"
+                    android:textColor="#666666"
+                    android:textSize="14sp" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 

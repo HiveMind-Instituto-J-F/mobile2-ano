@@ -17,6 +17,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -26,9 +27,12 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.FileProvider;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.NavController;
+import androidx.navigation.Navigation;
 
 import com.aula.mobile_hivemind.R;
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.resource.bitmap.CircleCrop;
 import com.cloudinary.android.MediaManager;
 import com.cloudinary.android.callback.ErrorInfo;
 import com.cloudinary.android.callback.UploadCallback;
@@ -46,16 +50,16 @@ import java.util.Map;
 
 public class LogoutFragment extends Fragment {
     private static final String TAG = "LogoutFragment";
+
     private static final String PREFS_NAME = "ProfilePrefs";
     private static final String KEY_USER_EMAIL = "user_email";
-    private static final String cloudName = "djouiin10";
-    private static final String uploadPreset = "Main_preset";
+    private static final String CLOUD_NAME = "djouiin10";
+    private static final String UPLOAD_PRESET = "Main_preset";
 
     private TextView usuarioLogado;
     private Button btnSair;
     private ShapeableImageView imgPerfil;
 
-    // Permissões e launchers
     private ActivityResultLauncher<String[]> permissionLauncher;
     private ActivityResultLauncher<Intent> galleryLauncher;
     private ActivityResultLauncher<Uri> cameraLauncher;
@@ -64,7 +68,6 @@ public class LogoutFragment extends Fragment {
     private SharedPreferences sharedPreferences;
     private FirebaseFirestore db;
     private String userEmail;
-    private boolean cloudinaryInitialized = false;
 
     public LogoutFragment() {}
 
@@ -74,7 +77,8 @@ public class LogoutFragment extends Fragment {
         sharedPreferences = requireContext().getSharedPreferences(PREFS_NAME, 0);
         db = FirebaseFirestore.getInstance();
         initializeLaunchers();
-        initCloudinary();
+
+        CloudinaryManager.init(requireContext());
     }
 
     @Override
@@ -86,34 +90,25 @@ public class LogoutFragment extends Fragment {
         btnSair = view.findViewById(R.id.btnSair);
         imgPerfil = view.findViewById(R.id.imgFoto);
 
+        userEmail = sharedPreferences.getString(KEY_USER_EMAIL, null);
+        if (userEmail == null) {
+            Toast.makeText(requireContext(), "Erro: usuário não identificado", Toast.LENGTH_SHORT).show();
+        } else {
+            usuarioLogado.setText(userEmail);
+        }
+
         loadUserProfileImage();
 
         btnSair.setOnClickListener(v -> mostrarDialogoConfirmacaoLogout());
         imgPerfil.setOnClickListener(v -> showImagePickerDialog());
 
+        LinearLayout itemInfoHistorico = view.findViewById(R.id.itemInfoHistorico);
+        itemInfoHistorico.setOnClickListener(v -> {
+            NavController navController = Navigation.findNavController(v);
+            navController.navigate(R.id.navigation_historico_diario);
+        });
+
         return view;
-    }
-
-    private void initCloudinary() {
-        try {
-            Map config = new HashMap();
-            config.put("cloud_name", cloudName);
-            config.put("secure", true);
-
-            // 🔧 INICIALIZAR SEM VERIFICAR SE JÁ ESTÁ INICIALIZADO
-            MediaManager.init(requireContext(), config);
-            cloudinaryInitialized = true;
-            Log.d(TAG, "Cloudinary inicializado com sucesso");
-
-        } catch (Exception e) {
-            Log.e(TAG, "Erro ao inicializar Cloudinary: " + e.getMessage());
-            cloudinaryInitialized = false;
-            Toast.makeText(requireContext(), "Cloudinary não configurado", Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    private boolean isCloudinaryReady() {
-        return cloudinaryInitialized;
     }
 
     private String getProfileImageKey() {
@@ -129,6 +124,7 @@ public class LogoutFragment extends Fragment {
         if (cloudinaryUrl != null) {
             Glide.with(requireContext())
                     .load(cloudinaryUrl)
+                    .transform(new CircleCrop())
                     .placeholder(R.drawable.img)
                     .into(imgPerfil);
             return;
@@ -139,7 +135,10 @@ public class LogoutFragment extends Fragment {
             byte[] byteArray = Base64.decode(encodedImage, Base64.DEFAULT);
             Bitmap bitmap = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.length);
             if (bitmap != null) {
-                imgPerfil.setImageBitmap(bitmap);
+                Glide.with(requireContext())
+                        .load(bitmap)
+                        .transform(new CircleCrop())
+                        .into(imgPerfil);
             }
         } else {
             imgPerfil.setImageResource(R.drawable.img);
@@ -218,8 +217,6 @@ public class LogoutFragment extends Fragment {
         editor.remove(KEY_USER_EMAIL);
         editor.apply();
 
-//        Toast.makeText(getContext(), "Deslogado com sucesso", Toast.LENGTH_SHORT).show();
-
         Intent intent = new Intent(getActivity(), LoginActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
@@ -227,59 +224,54 @@ public class LogoutFragment extends Fragment {
     }
 
     private void uploadToCloudinary(Uri imageUri) {
-        if (!isCloudinaryReady()) {
-            Log.e(TAG, "Cloudinary não está inicializado");
-//            Toast.makeText(requireContext(), "Serviço de imagens não disponível", Toast.LENGTH_SHORT).show();
+        CloudinaryManager.init(requireContext());
+
+        if (!CloudinaryManager.isInitialized()) {
+            Toast.makeText(requireContext(), "Cloudinary não configurado", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        Log.d(TAG, "Iniciando upload para Cloudinary");
+        if (userEmail == null) {
+            Toast.makeText(requireContext(), "Usuário não identificado. Faça login novamente.", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
-        String publicId = "profile_" + (userEmail != null ? userEmail.replace("@", "_").replace(".", "_") : "unknown") + "_" + System.currentTimeMillis();
+        String sanitizedEmail = userEmail.replace("@", "_").replace(".", "_");
+        String publicId = "profile_" + sanitizedEmail + "_" + System.currentTimeMillis();
 
         MediaManager.get().upload(imageUri)
                 .option("public_id", publicId)
-                .option("folder", "profile_pictures")
-                .unsigned(uploadPreset)
+                .option("folder", "profile_pictures/" + sanitizedEmail)
+                .unsigned(UPLOAD_PRESET)
                 .callback(new UploadCallback() {
                     @Override
                     public void onStart(String requestId) {
-                        Log.d(TAG, "Upload iniciado: " + requestId);
                         requireActivity().runOnUiThread(() ->
                                 Toast.makeText(requireContext(), "Enviando imagem...", Toast.LENGTH_SHORT).show());
                     }
 
                     @Override
-                    public void onProgress(String requestId, long bytes, long totalBytes) {
-                        Log.d(TAG, "Upload progresso: " + bytes + "/" + totalBytes);
-                    }
+                    public void onProgress(String requestId, long bytes, long totalBytes) {}
 
                     @Override
                     public void onSuccess(String requestId, Map resultData) {
-                        Log.d(TAG, "Upload concluído com sucesso");
                         String imageUrl = (String) resultData.get("secure_url");
-
-                        requireActivity().runOnUiThread(() -> {
-                            Toast.makeText(requireContext(), "Imagem salva na nuvem!", Toast.LENGTH_SHORT).show();
-                            saveCloudinaryUrl(imageUrl);
-                            Glide.with(requireContext())
-                                    .load(imageUrl)
-                                    .placeholder(R.drawable.img)
-                                    .into(imgPerfil);
-                        });
+                        saveCloudinaryUrl(imageUrl);
+                        Glide.with(requireContext())
+                                .load(imageUrl)
+                                .transform(new CircleCrop())
+                                .placeholder(R.drawable.img)
+                                .into(imgPerfil);
+                        Toast.makeText(requireContext(), "Imagem salva na nuvem!", Toast.LENGTH_SHORT).show();
                     }
 
                     @Override
                     public void onError(String requestId, ErrorInfo error) {
-                        Log.e(TAG, "Erro no upload: " + error.getDescription());
-                        requireActivity().runOnUiThread(() ->
-                                Toast.makeText(requireContext(), "Erro ao enviar imagem", Toast.LENGTH_LONG).show());
+                        Toast.makeText(requireContext(), "Erro ao enviar imagem: " + error.getDescription(), Toast.LENGTH_LONG).show();
                     }
 
                     @Override
-                    public void onReschedule(String requestId, ErrorInfo error) {
-                        Log.w(TAG, "Upload reagendado: " + error.getDescription());
-                    }
+                    public void onReschedule(String requestId, ErrorInfo error) {}
                 })
                 .dispatch();
     }
@@ -288,17 +280,14 @@ public class LogoutFragment extends Fragment {
         permissionLauncher = registerForActivityResult(
                 new ActivityResultContracts.RequestMultiplePermissions(),
                 result -> {
-                    Boolean cameraGranted = result.get(Manifest.permission.CAMERA);
-                    Boolean storageGranted = result.getOrDefault(
-                            Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
-                                    ? Manifest.permission.READ_MEDIA_IMAGES
-                                    : Manifest.permission.READ_EXTERNAL_STORAGE,
-                            false
-                    );
-
-                    if (cameraGranted != null && cameraGranted && storageGranted != null && storageGranted) {
-                        Log.d(TAG, "Permissões concedidas");
-                    } else {
+                    boolean allGranted = true;
+                    for (Boolean granted : result.values()) {
+                        if (granted == null || !granted) {
+                            allGranted = false;
+                            break;
+                        }
+                    }
+                    if (!allGranted) {
                         Toast.makeText(requireContext(), "Permissões necessárias não concedidas", Toast.LENGTH_SHORT).show();
                     }
                 }
@@ -309,9 +298,7 @@ public class LogoutFragment extends Fragment {
                 result -> {
                     if (result.getResultCode() == getActivity().RESULT_OK && result.getData() != null) {
                         Uri imageUri = result.getData().getData();
-                        if (imageUri != null) {
-                            handleSelectedImage(imageUri);
-                        }
+                        if (imageUri != null) handleSelectedImage(imageUri);
                     }
                 }
         );
@@ -351,7 +338,6 @@ public class LogoutFragment extends Fragment {
             }
         } catch (IOException e) {
             Toast.makeText(requireContext(), "Erro ao criar arquivo para foto", Toast.LENGTH_SHORT).show();
-            Log.e(TAG, "Erro ao criar arquivo para foto", e);
         }
     }
 
@@ -373,13 +359,15 @@ public class LogoutFragment extends Fragment {
             Bitmap resizedBitmap = resizeBitmap(bitmap, 500);
 
             saveProfileImageLocally(resizedBitmap);
-            imgPerfil.setImageBitmap(resizedBitmap);
+            Glide.with(requireContext())
+                    .load(resizedBitmap)
+                    .transform(new CircleCrop())
+                    .into(imgPerfil);
 
             uploadToCloudinary(imageUri);
 
         } catch (IOException e) {
             Toast.makeText(requireContext(), "Erro ao carregar imagem", Toast.LENGTH_SHORT).show();
-            Log.e(TAG, "Erro ao carregar imagem", e);
         }
     }
 

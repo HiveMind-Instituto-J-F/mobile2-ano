@@ -1,63 +1,66 @@
-<?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#FFFFFF"
-    tools:context=".ui.calendar.CalendarFragment">
-
-    <!-- Cabeçalho com ícones e título -->
-
-    <!-- CalendarView -->
+    xmlns:tools="http://schemas.android.com/tools"
+    android:background="#FFFFFF">
 
     <TextView
-        android:id="@+id/textView4"
-        android:layout_width="wrap_content"
+        android:id="@+id/textViewTitle"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="100dp"
-        android:layout_marginTop="15dp"
-        android:layout_marginEnd="90dp"
-        android:fontFamily="@font/lexend_deca_semibold"
         android:text="Registro total de paradas"
-        android:textColor="#000000"
-        android:textSize="19sp"
-        app:layout_constraintEnd_toEndOf="parent"
+        android:textSize="20sp"
+        android:gravity="center"
+        android:layout_margin="16dp"
+        android:fontFamily="@font/lexend_deca_semibold"
+        app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent"/>
 
     <com.prolificinteractive.materialcalendarview.MaterialCalendarView
         android:id="@+id/calendarView"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:layout_marginBottom="1dp"
-        android:autoHandwritingEnabled="true"
-        app:layout_constraintBottom_toTopOf="@+id/recyclerViewCalendar"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/textView4"
+        android:layout_height="0dp"
+        android:layout_margin="16dp"
+        app:mcv_firstDayOfWeek="monday"
+        app:mcv_showOtherDates="all"
+        app:mcv_selectionColor="@android:color/transparent"
         app:mcv_arrowColor="@android:color/transparent"
         app:mcv_dateTextAppearance="@style/CalendarDate"
-        app:mcv_firstDayOfWeek="monday"
+        app:mcv_weekDayTextAppearance="@style/CalendarWeek"
         app:mcv_headerTextAppearance="@style/CalendarHeader"
-        app:mcv_selectionColor="@android:color/transparent"
-        app:mcv_showOtherDates="all"
-        app:mcv_weekDayTextAppearance="@style/CalendarWeek" />
+        app:layout_constraintTop_toBottomOf="@id/textViewTitle"
+        app:layout_constraintBottom_toTopOf="@id/recyclerViewCalendar"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHeight_percent="0.42"/>
 
-    <!-- RecyclerView -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerViewCalendar"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:clipToPadding="false"
-        android:paddingTop="12dp"
-        android:paddingBottom="12dp"
-        android:scrollbars="vertical"
+        android:padding="8dp"
+        app:layout_constraintTop_toBottomOf="@id/calendarView"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        tools:listitem="@layout/parada_item_recycleview_calendar"/>
+
+    <TextView
+        android:id="@+id/textEmptyState"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:padding="32dp"
+        android:text="Nenhuma parada encontrada"
+        android:textColor="#666"
+        android:textSize="16sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/calendarView"
-        tools:listitem="@layout/parada_item_recycleview_calendar" />
-
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.83" />
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,6 +1,8 @@
 package com.aula.mobile_hivemind;
 
+import android.app.AlertDialog;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Toast;
@@ -27,8 +29,9 @@ public class MainActivity extends AppCompatActivity {
     private ActivityMainBinding binding;
     private NavController navController;
     private String userType;
+    private SharedPreferences sharedPreferences;
+    private int userId;
     private boolean isFabOpen = false;
-    private FirebaseAuth mAuth;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,6 +45,8 @@ public class MainActivity extends AppCompatActivity {
 
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
+
+        sharedPreferences = getSharedPreferences("user_prefs", MODE_PRIVATE);
 
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
@@ -72,6 +77,12 @@ public class MainActivity extends AppCompatActivity {
     // -------------------- FAB --------------------
     public void setFabVisibility(boolean visible) {
         if (fabMain != null) {
+            // Verifica se o usuário tem permissão para ver o FAB
+            if (!userHasFabPermission()) {
+                fabMain.setVisibility(View.GONE);
+                return;
+            }
+
             if (visible) {
                 fabMain.setVisibility(View.VISIBLE);
                 fabMain.setImageResource(R.drawable.baseline_add_24);
@@ -92,22 +103,36 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupFabAction() {
-        // 🔧 TODOS OS USUÁRIOS PODEM VER O FAB, MAS COM AÇÕES DIFERENTES
+        // Primeiro verifica se o usuário tem permissão para usar o FAB
+        if (!userHasFabPermission()) {
+            fabMain.setVisibility(View.GONE);
+            return;
+        }
+
         fabMain.setVisibility(View.VISIBLE);
 
         fabMain.setOnClickListener(v -> {
             switch (userType) {
                 case "regular": // OPERADOR
-                    navController.navigate(R.id.addParadaFragment);
+                    // ✅ CORREÇÃO: Verificar se o userId existe antes de usar
+                    if (sharedPreferences != null) {
+                        userId = sharedPreferences.getInt("user_id", -1); // -1 indica valor inválido
+
+                        if (userId == -1) {
+                            Toast.makeText(this, "Erro: ID do usuário não encontrado", Toast.LENGTH_SHORT).show();
+                            return;
+                        }
+
+                        Bundle bundle = new Bundle();
+                        bundle.putInt("userId", userId);
+                        navController.navigate(R.id.addParadaFragment, bundle);
+                    } else {
+                        Toast.makeText(this, "Erro de configuração do app", Toast.LENGTH_SHORT).show();
+                    }
                     break;
 
                 case "MOP": // ENGENHEIRO
-                    navController.navigate(R.id.addParadaFragment);
-                    break;
-
-                case "RH": // SUPERVISOR
-                    // 🔧 RH TAMBÉM PODE ADICIONAR PARADAS
-                    navController.navigate(R.id.addParadaFragment);
+                    navController.navigate(R.id.maintenanceFragment);
                     break;
 
                 default:
@@ -115,6 +140,10 @@ public class MainActivity extends AppCompatActivity {
                     break;
             }
         });
+    }
+
+    private boolean userHasFabPermission() {
+        return "regular".equals(userType) || "MOP".equals(userType);
     }
 
     private void closeFab(FloatingActionButton... fabs) {
@@ -156,7 +185,7 @@ public class MainActivity extends AppCompatActivity {
             navView.getMenu().findItem(R.id.navigation_homerh).setVisible(false);
             navView.getMenu().findItem(R.id.navigation_logout).setVisible(true);
 
-        } else if ("MOP".equals(userType)) {
+        } else if ("man".equals(userType)) {
             // ENGENHEIRO
             appBarConfiguration = new AppBarConfiguration.Builder(
                     R.id.navigation_home,
@@ -189,6 +218,9 @@ public class MainActivity extends AppCompatActivity {
             // Navegar para home RH por padrão
             navController.navigate(R.id.navigation_homerh);
 
+            // Esconder FAB para Supervisores
+            fabMain.setVisibility(View.GONE);
+
         } else {
             // PADRÃO (Operador)
             appBarConfiguration = new AppBarConfiguration.Builder(
@@ -198,10 +230,6 @@ public class MainActivity extends AppCompatActivity {
         }
 
         NavigationUI.setupWithNavController(navView, navController);
-    }
-
-    // ----------------- Nova Função ------------------------
-    public void mesclarApi(){
-
+        setupFabAction();
     }
 }

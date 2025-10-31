@@ -33,7 +33,6 @@ android {
     buildFeatures {
         viewBinding = true
     }
-    buildToolsVersion = "35.0.0"
 }
 
 dependencies {
@@ -55,7 +54,6 @@ dependencies {
     // Dependências do Gráfico
     implementation ("com.github.PhilJay:MPAndroidChart:v3.1.0")
     implementation(libs.firebase.firestore)
-    implementation(libs.firebase.database)
 
     // Dependências do JUnit 5
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.11.0-M1") // Versão mais recente
@@ -73,6 +71,7 @@ dependencies {
 
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation("com.squareup.retrofit2:converter-scalars:2.9.0")
     implementation("com.squareup.okhttp3:logging-interceptor:4.11.0")
     implementation("androidx.recyclerview:recyclerview:1.3.1")
     implementation("com.google.code.gson:gson:2.10.1")

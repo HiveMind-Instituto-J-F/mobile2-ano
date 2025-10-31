@@ -23,47 +23,43 @@ public class LoginActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
-        // Esconder action bar
         if (getSupportActionBar() != null) {
             getSupportActionBar().hide();
         }
 
         Button btnEntrar = findViewById(R.id.btnEntrar);
         btnEntrar.setOnClickListener(v -> {
-            String txtEmail = ((EditText) findViewById(R.id.editTextEMAILCONT)).getText().toString();
-            String txtSenha = ((EditText) findViewById(R.id.editTextPassword)).getText().toString();
+            String txtEmail = ((EditText) findViewById(R.id.editTextEMAILCONT)).getText().toString().trim();
+            String txtSenha = ((EditText) findViewById(R.id.editTextPassword)).getText().toString().trim();
 
             if (txtEmail.isEmpty() || txtSenha.isEmpty()) {
                 Toast.makeText(LoginActivity.this, "Preencha todos os campos", Toast.LENGTH_SHORT).show();
                 return;
             }
 
-            // Verificar diretamente na collection trabalhadores
             verificarLoginNoFirestore(txtEmail, txtSenha);
         });
     }
 
     private void verificarLoginNoFirestore(String email, String senha) {
-        // Busca o usuário na collection trabalhadores pelo login (email)
         db.collection("trabalhadores")
                 .whereEqualTo("login", email)
                 .limit(1)
                 .get()
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful() && !task.getResult().isEmpty()) {
-                        // Usuário encontrado - verificar senha
                         DocumentSnapshot document = task.getResult().getDocuments().get(0);
                         String senhaFirestore = document.getString("senha");
                         String tipoPerfil = document.getString("tipo_perfil");
 
                         if (senhaFirestore != null && senhaFirestore.equals(senha)) {
-                            // LOGIN BEM-SUCEDIDO
                             String userType = mapearTipoPerfilParaUserType(tipoPerfil);
 
                             android.content.SharedPreferences sharedPreferences = getSharedPreferences("ProfilePrefs", MODE_PRIVATE);
                             android.content.SharedPreferences.Editor editor = sharedPreferences.edit();
-                            editor.putString("user_email", email); // 🔧 SALVA O EMAIL
-                            editor.apply(); // 🔧 IMPORTANTE: Salva imediatamente
+                            editor.putString("user_email", email);
+                            editor.putInt("user_id", Integer.parseInt(document.getId()));
+                            editor.apply();
 
                             Log.d("Login", "Email salvo no SharedPreferences: " + email);
 
@@ -74,11 +70,9 @@ public class LoginActivity extends AppCompatActivity {
                             finish();
 
                         } else {
-                            // Senha incorreta
                             Toast.makeText(LoginActivity.this, "Senha incorreta", Toast.LENGTH_LONG).show();
                         }
                     } else {
-                        // Usuário não encontrado
                         Toast.makeText(LoginActivity.this, "Usuário não encontrado", Toast.LENGTH_LONG).show();
                     }
                 })
@@ -94,7 +88,7 @@ public class LoginActivity extends AppCompatActivity {
             case "operador":
                 return "regular";
             case "engenheiro":
-                return "MOP";
+                return "man";
             case "supervisor":
                 return "RH";
             default:
@@ -105,7 +99,5 @@ public class LoginActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        // Se quiser manter usuário logado entre sessões, pode implementar SharedPreferences
-        // Por enquanto, sempre mostrar tela de login
     }
 }
