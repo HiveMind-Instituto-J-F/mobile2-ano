@@ -1,11 +1,9 @@
 package com.aula.mobile_hivemind;
 
-import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.Toast;
 
 import com.aula.mobile_hivemind.auth.LoginActivity;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
@@ -19,9 +17,7 @@ import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
 import com.aula.mobile_hivemind.databinding.ActivityMainBinding;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.firestore.FirebaseFirestore;
+import com.aula.mobile_hivemind.utils.CustomToast;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -64,7 +60,7 @@ public class MainActivity extends AppCompatActivity {
         setupNavigationByUserType();
         setupFabAction();
 
-        Toast.makeText(this, "Bem-vindo! Perfil: " + userType, Toast.LENGTH_SHORT).show();
+        CustomToast.showInfo(this, "Bem-vindo! Perfil: " + userType);
     }
 
     private void redirectToLogin() {
@@ -119,7 +115,7 @@ public class MainActivity extends AppCompatActivity {
                         userId = sharedPreferences.getInt("user_id", -1); // -1 indica valor inválido
 
                         if (userId == -1) {
-                            Toast.makeText(this, "Erro: ID do usuário não encontrado", Toast.LENGTH_SHORT).show();
+                            CustomToast.showError(this, "Erro: ID do usuário não encontrado");
                             return;
                         }
 
@@ -127,7 +123,7 @@ public class MainActivity extends AppCompatActivity {
                         bundle.putInt("userId", userId);
                         navController.navigate(R.id.addParadaFragment, bundle);
                     } else {
-                        Toast.makeText(this, "Erro de configuração do app", Toast.LENGTH_SHORT).show();
+                        CustomToast.showError(this, "Erro de configuração do app");
                     }
                     break;
 
@@ -136,14 +132,14 @@ public class MainActivity extends AppCompatActivity {
                     break;
 
                 default:
-                    Toast.makeText(this, "Ação não disponível para seu perfil", Toast.LENGTH_SHORT).show();
+                    CustomToast.showWarning(this, "Ação não disponível para seu perfil");
                     break;
             }
         });
     }
 
     private boolean userHasFabPermission() {
-        return "regular".equals(userType) || "MOP".equals(userType);
+        return "regular".equals(userType) || "man".equals(userType);
     }
 
     private void closeFab(FloatingActionButton... fabs) {

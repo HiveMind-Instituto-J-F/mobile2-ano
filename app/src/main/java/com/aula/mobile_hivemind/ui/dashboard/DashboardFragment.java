@@ -10,31 +10,20 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
-import com.aula.mobile_hivemind.R;
 import com.aula.mobile_hivemind.api.RetrofitClient;
 import com.aula.mobile_hivemind.dto.RegistroParadaResponseDTO;
 import com.aula.mobile_hivemind.databinding.FragmentDashboardBinding;
-import com.aula.mobile_hivemind.ui.dashboard.itens.ProgressBarAdapter;
-import com.aula.mobile_hivemind.ui.dashboard.itens.ProgressItem;
-import com.github.mikephil.charting.charts.PieChart;
-import com.github.mikephil.charting.components.Legend;
-import com.github.mikephil.charting.data.PieData;
-import com.github.mikephil.charting.data.PieDataSet;
-import com.github.mikephil.charting.data.PieEntry;
-import com.github.mikephil.charting.formatter.PercentFormatter;
 
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
-import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -42,53 +31,64 @@ import retrofit2.Response;
 
 public class DashboardFragment extends Fragment {
 
-    TextView textResumoTitulo, textResumoNumero, textData, txtPorcent;
     private FragmentDashboardBinding binding;
-    private PieChart pieChart;
-    private RecyclerView recyclerViewProgressBars;
     private com.aula.mobile_hivemind.api.ApiService apiService;
+
+    // TextViews do novo layout
+    private TextView textResumoNumero, textData, txtPorcent;
+    private TextView txtSetorA, txtSetorB, txtSetorC;
+    private TextView txtTempoPeriodo, txtTempoHorario;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
         binding = FragmentDashboardBinding.inflate(inflater, container, false);
+        View root = binding.getRoot();
 
+        // Inicializar as views
+        inicializarViews();
+
+        // Inicializar API service
+        apiService = RetrofitClient.getApiService();
+
+        // Atualizar dados
+        atualizarDataAtual();
+        atualizarResumo();
+        atualizarDadosSetores();
+        atualizarHorasPerdidas();
+
+        return root;
+    }
+
+    private void inicializarViews() {
         textResumoNumero = binding.textResumoNumero;
-        textResumoTitulo = binding.textResumoTitulo;
         textData = binding.textData;
         txtPorcent = binding.txtPorcent;
 
-        apiService = RetrofitClient.getApiService();
+        // Buscar as views dos setores - você precisará adicionar esses IDs no XML
+        // txtSetorA = binding.txtSetorA;
+        // txtSetorB = binding.txtSetorB;
+        // txtSetorC = binding.txtSetorC;
 
-        pieChart = binding.pieChart;
-        recyclerViewProgressBars = binding.recyclerViewProgressBars;
-
-        atualizarDataAtual();
-
-        atualizarResumo();
-
-        setupPieChart();
-        setupProgressBars();
-
-        return binding.getRoot();
+        // txtTempoPeriodo = binding.txtTempoPeriodo;
+        // txtTempoHorario = binding.txtTempoHorario;
     }
 
     private void atualizarDataAtual() {
         LocalDate hoje = LocalDate.now();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMMM 'de' yyyy", new Locale("pt", "BR"));
-        String mesAnoFormatado = hoje.format(formatter);
-
-        mesAnoFormatado = mesAnoFormatado.substring(0, 1).toUpperCase() + mesAnoFormatado.substring(1);
-
-        textData.setText(mesAnoFormatado);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("'Hoje dia' dd/MM/yyyy", new Locale("pt", "BR"));
+        String dataFormatada = hoje.format(formatter);
+        textData.setText(dataFormatada);
     }
 
     private void atualizarResumo() {
         buscarParadasDoMesAtual(new ParadasCallback() {
             @Override
-            public void onParadasLoaded(int paradasMesAtual, int paradasMesAnterior) {
+            public void onParadasLoaded(int paradasMesAtual, int paradasMesAnterior, Map<String, Integer> paradasPorSetor) {
+                // Atualizar número principal
                 textResumoNumero.setText(String.valueOf(paradasMesAtual));
 
+                // Calcular porcentagem
                 double porcentagem;
                 if (paradasMesAnterior != 0) {
                     porcentagem = ((double)(paradasMesAtual - paradasMesAnterior) / paradasMesAnterior) * 100;
@@ -96,24 +96,90 @@ public class DashboardFragment extends Fragment {
                     porcentagem = paradasMesAtual > 0 ? 100 : 0;
                 }
 
-                if (porcentagem >= 0) {
-                    txtPorcent.setText("cerca de " + String.format("%.1f%%", porcentagem) + " a mais em relação ao mês anterior");
-                } else {
-                    txtPorcent.setText("cerca de " + String.format("%.1f%%", Math.abs(porcentagem)) + " a menos em relação ao mês anterior");
-                }
+                // Formatar porcentagem conforme a imagem
+                String textoPorcentagem = String.format(Locale.getDefault(), "%.2f%%", Math.abs(porcentagem));
+                txtPorcent.setText(textoPorcentagem);
+
+                // Atualizar dados dos setores
+                atualizarDadosSetoresComMapa(paradasPorSetor);
             }
 
             @Override
             public void onError(String error) {
                 Log.e("DashboardFragment", "Erro ao carregar paradas: " + error);
                 textResumoNumero.setText("0");
-                txtPorcent.setText("Erro ao carregar dados");
+                txtPorcent.setText("0.00%");
+            }
+        });
+    }
+
+    private void atualizarDadosSetores() {
+        // Dados estáticos iniciais - serão substituídos pelos dados reais
+        if (txtSetorA != null) txtSetorA.setText("0.75% - 100%");
+        if (txtSetorB != null) txtSetorB.setText("85 - 70%");
+        if (txtSetorC != null) txtSetorC.setText("--");
+    }
+
+    private void atualizarDadosSetoresComMapa(Map<String, Integer> paradasPorSetor) {
+        // Calcular totais e porcentagens para cada setor
+        int totalParadas = 0;
+        for (int quantidade : paradasPorSetor.values()) {
+            totalParadas += quantidade;
+        }
+
+        // Atualizar cada setor (exemplo com 3 setores principais)
+        if (txtSetorA != null && paradasPorSetor.containsKey("Setor A")) {
+            int quantidadeA = paradasPorSetor.get("Setor A");
+            double porcentagemA = totalParadas > 0 ? (quantidadeA * 100.0) / totalParadas : 0;
+            txtSetorA.setText(String.format(Locale.getDefault(), "%.2f%% - %d%%", porcentagemA, (int)(porcentagemA)));
+        }
+
+        if (txtSetorB != null && paradasPorSetor.containsKey("Setor B")) {
+            int quantidadeB = paradasPorSetor.get("Setor B");
+            double porcentagemB = totalParadas > 0 ? (quantidadeB * 100.0) / totalParadas : 0;
+            txtSetorB.setText(String.format(Locale.getDefault(), "%d - %.0f%%", quantidadeB, porcentagemB));
+        }
+
+        if (txtSetorC != null && paradasPorSetor.containsKey("Setor C")) {
+            int quantidadeC = paradasPorSetor.get("Setor C");
+            if (quantidadeC > 0) {
+                double porcentagemC = totalParadas > 0 ? (quantidadeC * 100.0) / totalParadas : 0;
+                txtSetorC.setText(String.format(Locale.getDefault(), "%.2f%%", porcentagemC));
+            } else {
+                txtSetorC.setText("--");
+            }
+        }
+    }
+
+    private void atualizarHorasPerdidas() {
+        // Buscar dados de horas perdidas
+        buscarHorasPerdidas(new HorasPerdidasCallback() {
+            @Override
+            public void onHorasCarregadas(double tempoPeriodo, double tempoHorario) {
+                if (txtTempoPeriodo != null) {
+                    txtTempoPeriodo.setText(String.format(Locale.getDefault(), "%.1f horas", tempoPeriodo));
+                }
+                if (txtTempoHorario != null) {
+                    txtTempoHorario.setText(String.format(Locale.getDefault(), "%.1f horas", tempoHorario));
+                }
+            }
+
+            @Override
+            public void onError(String error) {
+                Log.e("DashboardFragment", "Erro ao carregar horas perdidas: " + error);
+                if (txtTempoPeriodo != null) txtTempoPeriodo.setText("--");
+                if (txtTempoHorario != null) txtTempoHorario.setText("--");
             }
         });
     }
 
     interface ParadasCallback {
-        void onParadasLoaded(int paradasMesAtual, int paradasMesAnterior);
+        void onParadasLoaded(int paradasMesAtual, int paradasMesAnterior, Map<String, Integer> paradasPorSetor);
+        void onError(String error);
+    }
+
+    interface HorasPerdidasCallback {
+        void onHorasCarregadas(double tempoPeriodo, double tempoHorario);
         void onError(String error);
     }
 
@@ -135,6 +201,7 @@ public class DashboardFragment extends Fragment {
 
                     int contadorMesAtual = 0;
                     int contadorMesAnterior = 0;
+                    Map<String, Integer> paradasPorSetor = new HashMap<>();
 
                     for (RegistroParadaResponseDTO parada : todasParadas) {
                         try {
@@ -145,6 +212,12 @@ public class DashboardFragment extends Fragment {
 
                                 int mesParada = dataParadaCal.get(Calendar.MONTH);
                                 int anoParada = dataParadaCal.get(Calendar.YEAR);
+
+                                String setor = parada.getDes_setor();
+                                if (setor == null) setor = "Sem Setor";
+
+                                // Contar por setor
+                                paradasPorSetor.put(setor, paradasPorSetor.getOrDefault(setor, 0) + 1);
 
                                 // Verificar se é do mês atual
                                 if (mesParada == mesAtual && anoParada == anoAtual) {
@@ -161,7 +234,7 @@ public class DashboardFragment extends Fragment {
                     }
 
                     Log.d("DashboardFragment", "Paradas mês atual: " + contadorMesAtual + ", mês anterior: " + contadorMesAnterior);
-                    callback.onParadasLoaded(contadorMesAtual, contadorMesAnterior);
+                    callback.onParadasLoaded(contadorMesAtual, contadorMesAnterior, paradasPorSetor);
 
                 } else {
                     callback.onError("Erro na resposta: " + response.code());
@@ -175,76 +248,23 @@ public class DashboardFragment extends Fragment {
         });
     }
 
-    private void setupPieChart() {
-        // Dados fictícios baseados na imagem
-        ArrayList<PieEntry> entries = new ArrayList<>();
-        entries.add(new PieEntry(20f, "Setor A"));
-        entries.add(new PieEntry(18f, "Setor B"));
-        entries.add(new PieEntry(16f, "Setor C"));
-        entries.add(new PieEntry(14f, "Setor D"));
-        entries.add(new PieEntry(12f, "Setor E"));
-
-        PieDataSet dataSet = new PieDataSet(entries, "");
-        dataSet.setSliceSpace(3f);
-        dataSet.setSelectionShift(5f);
-
-        // Cores personalizadas
-        ArrayList<Integer> colors = new ArrayList<>();
-        colors.add(Color.parseColor("#EF4444")); // Vermelho
-        colors.add(Color.parseColor("#EC2B7B")); // Rosa
-        colors.add(Color.parseColor("#B68DF6")); // Roxo
-        colors.add(Color.parseColor("#8059E7")); // Azul escuro
-        colors.add(Color.parseColor("#4C65F1")); // Azul
-        colors.add(Color.parseColor("#26C8D8")); // Ciano
-        colors.add(Color.parseColor("#43D8B0")); // Verde claro
-        colors.add(Color.parseColor("#82E762")); // Verde
-        colors.add(Color.parseColor("#FFD95D")); // Amarelo
-
-        dataSet.setColors(colors);
-
-        PieData pieData = new PieData(dataSet);
-        pieData.setValueFormatter(new PercentFormatter(pieChart));
-        pieData.setValueTextSize(11f);
-        pieData.setValueTextColor(Color.WHITE);
-
-        // Configurações do gráfico
-        pieChart.setData(pieData);
-        pieChart.setUsePercentValues(true);
-        pieChart.getDescription().setEnabled(false);
-        pieChart.setHoleColor(Color.TRANSPARENT);
-        pieChart.setHoleRadius(58f); // Raio interno para o buraco (donut)
-        pieChart.setTransparentCircleRadius(61f);
-        pieChart.setDrawCenterText(true);
-        pieChart.setCenterText("$2 570");
-        pieChart.setCenterTextColor(Color.WHITE);
-        pieChart.setCenterTextSize(24f);
-
-        // Remover a legenda padrão
-        Legend legend = pieChart.getLegend();
-        legend.setEnabled(false);
-
-        pieChart.invalidate(); // Atualiza o gráfico
-    }
-
-    private void setupProgressBars() {
-        List<ProgressItem> progressItems = new ArrayList<>();
-        // Dados fictícios baseados na imagem
-        progressItems.add(new ProgressItem("Setor A", 25, R.color.red_500));
-        progressItems.add(new ProgressItem("Setor B", 22, R.color.pink_500));
-        progressItems.add(new ProgressItem("Setor C", 20, R.color.purple_500));
-        progressItems.add(new ProgressItem("Setor D", 17, R.color.indigo_500));
-        progressItems.add(new ProgressItem("Setor E", 15, R.color.blue_500));
-
-        recyclerViewProgressBars.setLayoutManager(new LinearLayoutManager(getContext()));
-
-        // Define o adapter com os dados fictícios
-        ProgressBarAdapter adapter = new ProgressBarAdapter(progressItems);
-        recyclerViewProgressBars.setAdapter(adapter);
+    private void buscarHorasPerdidas(HorasPerdidasCallback callback) {
+        // Implementar a lógica para buscar horas perdidas
+        // Por enquanto, retornar valores fictícios baseados na imagem
+        callback.onHorasCarregadas(900.0, 85.0);
     }
 
     @Override
     public void onResume() {
         super.onResume();
+        // Atualizar dados quando o fragment for retomado
         atualizarResumo();
+        atualizarHorasPerdidas();
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        binding = null;
     }
 }

@@ -12,7 +12,6 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -25,6 +24,7 @@ import com.aula.mobile_hivemind.R;
 import com.aula.mobile_hivemind.api.RetrofitClient;
 import com.aula.mobile_hivemind.dto.ManutencaoRequestDTO;
 import com.aula.mobile_hivemind.dto.ParadaSQLRequestDTO;
+import com.aula.mobile_hivemind.utils.CustomToast;
 import com.google.android.material.datepicker.CalendarConstraints;
 import com.google.android.material.datepicker.MaterialDatePicker;
 import com.google.gson.Gson;
@@ -120,8 +120,6 @@ public class MaintenanceFragment extends Fragment {
         txtIdMaquina.setFocusable(false);
 
 
-        Log.d("MaintenanceFragment", "Dados recebidos - ID Máquina: " + idMaquina +
-                ", ID Usuário: " + idUsuario + ", Setor: " + setor);
     }
 
     private void configurarDatePicker() {
@@ -156,7 +154,7 @@ public class MaintenanceFragment extends Fragment {
 
         datePicker.addOnPositiveButtonClickListener(selection -> {
             if (selection > today) {
-                Toast.makeText(requireContext(), "Não é possível adicionar datas futuras", Toast.LENGTH_SHORT).show();
+                CustomToast.showWarning(requireContext(), "Não é possível adicionar datas futuras");
                 return;
             }
 
@@ -195,12 +193,12 @@ public class MaintenanceFragment extends Fragment {
         String relatorio = editRelatorio.getText().toString().trim();
 
         if (!isValidTimeFormat(horaInicioStr) || !isValidTimeFormat(horaFimStr)) {
-            Toast.makeText(requireContext(), "Formato de hora inválido. Use HH:mm", Toast.LENGTH_SHORT).show();
+            CustomToast.showError(requireContext(), "Formato de hora inválido. Use HH:mm");
             return;
         }
 
         if (idManutencista == 0) {
-            Toast.makeText(requireContext(), "ID do usuário inválido!", Toast.LENGTH_SHORT).show();
+            CustomToast.showError(requireContext(), "ID do usuário inválido!");
             return;
         }
 
@@ -222,7 +220,6 @@ public class MaintenanceFragment extends Fragment {
 
         Gson gson = new Gson();
         String jsonRequest = gson.toJson(manutencaoRequest);
-        Log.d("MaintenanceFragment", "JSON enviado: " + jsonRequest);
 
         btnConcluir.setEnabled(false);
         btnConcluir.setText("Salvando...");
@@ -235,16 +232,13 @@ public class MaintenanceFragment extends Fragment {
                         btnConcluir.setText("CONCLUIR RELATÓRIO");
 
                         if (response.isSuccessful() && response.body() != null) {
-                            Log.d("MaintenanceFragment", "Resposta body: " + response.body());
 
-                            // ✅ EXTRAIR O ID DA MANUTENÇÃO
                             int idManutencao = extrairIdManutencao(response.body());
 
                             if (idManutencao != -1) {
-                                // ✅ AGORA CHAMAR A PROCEDURE PARA INSERIR PARADA
                                 inserirParadaComProcedure(idManutencao);
                             } else {
-                                Toast.makeText(requireContext(), "Manutenção salva, mas não foi possível obter o ID", Toast.LENGTH_LONG).show();
+                                CustomToast.showWarning(requireContext(), "Manutenção salva, mas não foi possível obter o ID");
                                 navigateToConfirmation();
                             }
 
@@ -258,7 +252,7 @@ public class MaintenanceFragment extends Fragment {
                                     Log.e("MaintenanceFragment", "Erro ao ler errorBody", e);
                                 }
                             }
-                            Toast.makeText(requireContext(), errorMessage, Toast.LENGTH_LONG).show();
+                            CustomToast.showError(requireContext(), errorMessage);
                         }
                     }
 
@@ -266,7 +260,7 @@ public class MaintenanceFragment extends Fragment {
                     public void onFailure(@NonNull Call<String> call, @NonNull Throwable t) {
                         btnConcluir.setEnabled(true);
                         btnConcluir.setText("CONCLUIR RELATÓRIO");
-                        Toast.makeText(requireContext(), "Falha na conexão: " + t.getMessage(), Toast.LENGTH_LONG).show();
+                        CustomToast.showError(requireContext(), "Falha na conexão: " + t.getMessage());
                     }
                 });
     }
@@ -294,29 +288,17 @@ public class MaintenanceFragment extends Fragment {
                 horaFimTime     // hora_fim (formato HH:mm:ss)
         );
 
-        Log.d("MaintenanceFragment", "Dados da Procedure:");
-        Log.d("MaintenanceFragment", "ID Manutenção: " + idManutencao);
-        Log.d("MaintenanceFragment", "ID Máquina: " + idMaquina);
-        Log.d("MaintenanceFragment", "ID Usuário: " + idUsuario);
-        Log.d("MaintenanceFragment", "Setor: " + setor);
-        Log.d("MaintenanceFragment", "Data Parada: " + dateParada);
-        Log.d("MaintenanceFragment", "Hora Início: " + horaInicioTime);
-        Log.d("MaintenanceFragment", "Hora Fim: " + horaFimTime);
-
 
         apiSQLService.inserirParada(paradaProcedure)
                 .enqueue(new Callback<ResponseBody>() {
                     @Override
                     public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
                         if (response.isSuccessful()) {
-                            Log.d("MaintenanceFragment", "Procedure executada com sucesso!");
                             // Agora finalizar a parada no MongoDB
                             finalizarParadaAposManutencao(idManutencao);
                         } else {
-                            Log.e("MaintenanceFragment", "Erro na procedure: " + response.code());
-                            Toast.makeText(requireContext(),
-                                    "Manutenção salva (ID: " + idManutencao + "), mas erro ao registrar parada: " + response.code(),
-                                    Toast.LENGTH_LONG).show();
+                            CustomToast.showWarning(requireContext(),
+                                    "Manutenção salva (ID: " + idManutencao + "), mas erro ao registrar parada: " + response.code());
                             finalizarParadaAposManutencao(idManutencao);
                         }
                     }
@@ -324,9 +306,8 @@ public class MaintenanceFragment extends Fragment {
                     @Override
                     public void onFailure(Call<ResponseBody> call, Throwable t) {
                         Log.e("MaintenanceFragment", "Falha na procedure: " + t.getMessage());
-                        Toast.makeText(requireContext(),
-                                "Manutenção salva (ID: " + idManutencao + "), mas falha ao registrar parada: " + t.getMessage(),
-                                Toast.LENGTH_LONG).show();
+                        CustomToast.showError(requireContext(),
+                                "Manutenção salva (ID: " + idManutencao + "), mas falha ao registrar parada: " + t.getMessage());
                         finalizarParadaAposManutencao(idManutencao);
                     }
                 });
@@ -337,7 +318,7 @@ public class MaintenanceFragment extends Fragment {
 
         if (idMongo.isEmpty()) {
             Log.e("MaintenanceFragment", "ID MongoDB não encontrado");
-            Toast.makeText(requireContext(), "Manutenção salva, mas parada não foi finalizada (ID não encontrado)", Toast.LENGTH_LONG).show();
+            CustomToast.showWarning(requireContext(), "Manutenção salva, mas parada não foi finalizada (ID não encontrado)");
             navigateToConfirmation();
             return;
         }
@@ -355,32 +336,25 @@ public class MaintenanceFragment extends Fragment {
                 progressDialog.dismiss();
 
                 if (response.isSuccessful()) {
-                    Log.d("MaintenanceFragment", "Parada finalizada com sucesso! ID Manutenção: " + idManutencao);
-                    Toast.makeText(requireContext(),
-                            "Manutenção registrada e parada finalizada! ID: " + idManutencao,
-                            Toast.LENGTH_LONG).show();
+                    CustomToast.showSuccess(requireContext(),
+                            "Manutenção registrada e parada finalizada! ID: " + idManutencao);
                 } else {
-                    Log.e("MaintenanceFragment", "Erro ao finalizar parada: " + response.code());
-                    Toast.makeText(requireContext(),
-                            "Manutenção salva (ID: " + idManutencao + "), mas erro ao finalizar parada: " + response.code(),
-                            Toast.LENGTH_LONG).show();
+                    CustomToast.showWarning(requireContext(),
+                            "Manutenção salva (ID: " + idManutencao + "), mas erro ao finalizar parada: " + response.code());
                 }
             }
 
             @Override
             public void onFailure(Call<ResponseBody> call, Throwable t) {
                 progressDialog.dismiss();
-                Log.e("MaintenanceFragment", "Falha ao finalizar parada: " + t.getMessage());
-                Toast.makeText(requireContext(),
-                        "Manutenção salva (ID: " + idManutencao + "), mas falha ao finalizar parada: " + t.getMessage(),
-                        Toast.LENGTH_LONG).show();
+                CustomToast.showError(requireContext(),
+                        "Manutenção salva (ID: " + idManutencao + "), mas falha ao finalizar parada: " + t.getMessage());
             }
         });
     }
 
     private Time parseTimeFromString(String timeString) {
         if (timeString == null || timeString.isEmpty()) {
-            Log.w("MaintenanceFragment", "Hora nula ou vazia, usando padrão");
             return new Time(0); // Meia-noite
         }
 
@@ -449,7 +423,6 @@ public class MaintenanceFragment extends Fragment {
 
     private int extrairIdManutencao(String responseBody) {
         try {
-            Log.d("MaintenanceFragment", "Tentando extrair ID de: " + responseBody);
 
             // Tentar parsear como JSON primeiro
             try {
@@ -467,10 +440,6 @@ public class MaintenanceFragment extends Fragment {
                 Log.d("MaintenanceFragment", "Resposta não é JSON válido, tentando extrair de texto");
             }
 
-            // ✅ CORREÇÃO: Melhorar a extração do ID do texto
-            // Para resposta: "A manutenção foi inserida com sucesso! ID: 1251"
-
-            // Método 1: Buscar por padrão "ID: número"
             if (responseBody.contains("ID:") || responseBody.contains("Id:") || responseBody.contains("id:")) {
                 String[] parts = responseBody.split("ID:|Id:|id:");
                 if (parts.length > 1) {
@@ -482,17 +451,14 @@ public class MaintenanceFragment extends Fragment {
                 }
             }
 
-            // Método 2: Buscar o último número na string (mais robusto)
             java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("\\d+");
             java.util.regex.Matcher matcher = pattern.matcher(responseBody);
 
-            // Buscar todos os números e pegar o último (que deve ser o ID)
             int lastId = -1;
             while (matcher.find()) {
                 try {
                     lastId = Integer.parseInt(matcher.group());
                 } catch (NumberFormatException e) {
-                    // Ignorar se não for número válido
                 }
             }
 
@@ -547,10 +513,23 @@ public class MaintenanceFragment extends Fragment {
     }
 
     private boolean validarCampos() {
-        return !editTextDATAMANUTENCAO.getText().toString().trim().isEmpty()
-                && !editTextHoraInicio.getText().toString().trim().isEmpty()
-                && !editTextHoraFim.getText().toString().trim().isEmpty()
-                && !editRelatorio.getText().toString().trim().isEmpty();
+        if (editTextDATAMANUTENCAO.getText().toString().trim().isEmpty()) {
+            CustomToast.showWarning(requireContext(), "Data da manutenção é obrigatória");
+            return false;
+        }
+        if (editTextHoraInicio.getText().toString().trim().isEmpty()) {
+            CustomToast.showWarning(requireContext(), "Hora de início é obrigatória");
+            return false;
+        }
+        if (editTextHoraFim.getText().toString().trim().isEmpty()) {
+            CustomToast.showWarning(requireContext(), "Hora de término é obrigatória");
+            return false;
+        }
+        if (editRelatorio.getText().toString().trim().isEmpty()) {
+            CustomToast.showWarning(requireContext(), "Relatório da manutenção é obrigatório");
+            return false;
+        }
+        return true;
     }
 
     private void navigateBack() {

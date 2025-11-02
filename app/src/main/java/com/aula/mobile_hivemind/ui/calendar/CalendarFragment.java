@@ -1,17 +1,21 @@
 package com.aula.mobile_hivemind.ui.calendar;
 
 import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
+import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.graphics.drawable.LayerDrawable;
 import android.os.Bundle;
+import android.text.SpannableString;
+import android.text.Spanned;
 import android.text.style.ForegroundColorSpan;
+import android.text.style.RelativeSizeSpan;
+import android.text.style.StyleSpan;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
@@ -20,9 +24,9 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import com.aula.mobile_hivemind.api.RetrofitClient;
 import com.aula.mobile_hivemind.api.SqlApiService;
 import com.aula.mobile_hivemind.databinding.FragmentCalendarBinding;
-import com.aula.mobile_hivemind.dto.ParadaSQLRequestDTO;
 import com.aula.mobile_hivemind.dto.ParadaSQLResponseDTO;
 import com.aula.mobile_hivemind.dto.RegistroParadaResponseDTO;
+import com.aula.mobile_hivemind.utils.CustomToast;
 import com.aula.mobile_hivemind.recyclerViewParadas.Parada;
 import com.aula.mobile_hivemind.recyclerViewParadas.ParadaCalendarAdapter;
 import com.prolificinteractive.materialcalendarview.CalendarDay;
@@ -30,15 +34,16 @@ import com.prolificinteractive.materialcalendarview.DayViewDecorator;
 import com.prolificinteractive.materialcalendarview.DayViewFacade;
 import com.prolificinteractive.materialcalendarview.MaterialCalendarView;
 import com.prolificinteractive.materialcalendarview.OnDateSelectedListener;
+import com.prolificinteractive.materialcalendarview.format.ArrayWeekDayFormatter;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
+import java.util.Set;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -57,10 +62,20 @@ public class CalendarFragment extends Fragment {
     private String userType;
     private String userSetor;
 
-    // Cores para diferenciar os tipos de parada
-    private static final int COR_EM_ANDAMENTO = Color.rgb(255, 165, 0); // LARANJA
-    private static final int COR_FINALIZADA = Color.rgb(0, 128, 0);    // VERDE
-    private static final int COR_MISTA = Color.rgb(128, 0, 128);       // ROXO (ambos os tipos)
+    // Cores melhoradas para uma aparência mais profissional
+    private static final int COR_EM_ANDAMENTO = Color.rgb(220, 53, 69);    // Vermelho mais suave
+    private static final int COR_FINALIZADA = Color.rgb(40, 167, 69);      // Verde mais suave
+    private static final int COR_MISTA = Color.rgb(111, 66, 193);          // Roxo elegante para misto
+    private static final int COR_SELECAO = Color.rgb(23, 162, 184);        // Azul para seleção
+    private static final int COR_TEXTO_PRIMARIO = Color.rgb(33, 37, 41);
+    private static final int COR_TEXTO_SECUNDARIO = Color.rgb(108, 117, 125);
+    private static final int COR_FUNDO_CALENDARIO = Color.rgb(248, 249, 250);
+
+    // Mapas para controlar as datas
+    private Set<CalendarDay> datasEmAndamento;
+    private Set<CalendarDay> datasFinalizadas;
+    private Set<CalendarDay> datasMistas;
+    private CalendarDay dataSelecionadaAtual;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -74,44 +89,33 @@ public class CalendarFragment extends Fragment {
         mongoApiService = RetrofitClient.getApiService();
         dateFormat = new SimpleDateFormat("dd, MMM yyyy", Locale.getDefault());
 
-        // Obter informações do usuário
+        // Inicializar conjuntos de datas
+        datasEmAndamento = new HashSet<>();
+        datasFinalizadas = new HashSet<>();
+        datasMistas = new HashSet<>();
+        dataSelecionadaAtual = null;
+
         obterInformacoesUsuario();
 
-        MaterialCalendarView calendarView = binding.calendarView;
+        configurarAparenciaCalendario();
 
-        // Título do mês em português
-        calendarView.setTitleFormatter(day -> {
-            SimpleDateFormat format = new SimpleDateFormat("MMMM yyyy", new Locale("pt", "BR"));
-            return "     " + format.format(day.getDate());
-        });
-
-        // Remove setas
-        calendarView.setLeftArrowMask(null);
-        calendarView.setRightArrowMask(null);
-
-        // Decora os dias do mês atual
-        calendarView.addDecorator(new CurrentMonthDecorator());
-
-        // Decoradores visuais para outros meses
-        decorateOtherMonthDays(calendarView);
-
-        // Inicializar lista
         todasParadas = new ArrayList<>();
 
-        // Configuração do RecyclerView
-        paradaCalendarAdapter = new ParadaCalendarAdapter(getContext(), todasParadas, sqlApiService);
-        binding.recyclerViewCalendar.setLayoutManager(new LinearLayoutManager(getContext()));
-        binding.recyclerViewCalendar.setAdapter(paradaCalendarAdapter);
+        configurarRecyclerView();
 
-        // Carregar paradas de TODAS as fontes
-        carregarTodasParadas(calendarView);
+        carregarTodasParadas();
 
-        // Listener de clique no calendário
-        calendarView.setOnDateChangedListener(new OnDateSelectedListener() {
+        binding.calendarView.setOnDateChangedListener(new OnDateSelectedListener() {
             @Override
             public void onDateSelected(@NonNull MaterialCalendarView widget, @NonNull CalendarDay date, boolean selected) {
                 if (selected) {
+                    dataSelecionadaAtual = date;
                     filtrarParadasPorData(date);
+                    // Reaplicar todos os decoradores para atualizar a seleção
+                    reaplicarDecoradores();
+                } else {
+                    dataSelecionadaAtual = null;
+                    reaplicarDecoradores();
                 }
             }
         });
@@ -119,28 +123,99 @@ public class CalendarFragment extends Fragment {
         return root;
     }
 
+    private void configurarAparenciaCalendario() {
+        MaterialCalendarView calendarView = binding.calendarView;
+
+        // Configurar título do mês em português com formatação melhorada
+        calendarView.setTitleFormatter(month -> {
+            SimpleDateFormat format = new SimpleDateFormat("MMMM yyyy", new Locale("pt", "BR"));
+            String mesAno = format.format(month.getDate());
+
+            // Criar texto com formatação especial
+            SpannableString spannable = new SpannableString(mesAno);
+            spannable.setSpan(new StyleSpan(Typeface.BOLD), 0, spannable.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            spannable.setSpan(new RelativeSizeSpan(1.2f), 0, spannable.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            spannable.setSpan(new ForegroundColorSpan(COR_TEXTO_PRIMARIO), 0, spannable.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+            return spannable;
+        });
+
+        // Configurar dias da semana em português
+        calendarView.setWeekDayFormatter(new ArrayWeekDayFormatter(
+                new String[]{"Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"}
+        ));
+
+        // Remover setas de navegação (como solicitado)
+        calendarView.setLeftArrowMask(null);
+        calendarView.setRightArrowMask(null);
+
+        // Configurar cores e estilos
+        calendarView.setBackgroundColor(COR_FUNDO_CALENDARIO);
+
+        // Aplicar decoradores visuais
+        calendarView.addDecorator(new DiaAtualDecorador());
+        calendarView.addDecorator(new DiasOutrosMesesDecorador());
+
+        // Configurar altura das linhas
+        calendarView.setTileHeightDp(48);
+    }
+
+    private void reaplicarDecoradores() {
+        // Limpar todos os decoradores
+        binding.calendarView.removeDecorators();
+
+        // Reaplicar decoradores base
+        configurarAparenciaCalendario();
+
+        // Reaplicar decoradores de eventos
+        aplicarDecoradoresEventos();
+
+        // Aplicar decorador de seleção se houver data selecionada
+        if (dataSelecionadaAtual != null) {
+            binding.calendarView.addDecorator(new SelecaoDecorador(dataSelecionadaAtual));
+        }
+    }
+
+    private void configurarRecyclerView() {
+        paradaCalendarAdapter = new ParadaCalendarAdapter(getContext(), todasParadas, sqlApiService);
+        binding.recyclerViewCalendar.setLayoutManager(new LinearLayoutManager(getContext()));
+        binding.recyclerViewCalendar.setAdapter(paradaCalendarAdapter);
+
+        // Adicionar divisor entre itens
+        binding.recyclerViewCalendar.addItemDecoration(new androidx.recyclerview.widget.DividerItemDecoration(
+                getContext(), LinearLayoutManager.VERTICAL));
+    }
+
     private void obterInformacoesUsuario() {
         // Implemente conforme sua lógica de autenticação
-        // Exemplo temporário:
-        userType = "MOP"; // Engenheiro
+        userType = "man"; // Engenheiro
         userSetor = "Montagem";
     }
 
-    private void carregarTodasParadas(MaterialCalendarView calendarView) {
+    private void carregarTodasParadas() {
         Log.d("CalendarFragment", "=== INICIANDO CARREGAMENTO DE PARADAS ===");
-        Log.d("CalendarFragment", "Tipo de usuário: " + userType);
 
-        // Limpar lista atual
+        // Limpar dados anteriores
         todasParadas.clear();
+        datasEmAndamento.clear();
+        datasFinalizadas.clear();
+        datasMistas.clear();
+        dataSelecionadaAtual = null;
 
-        // Carregar paradas do MongoDB (paradas em andamento) - LARANJA
-        carregarParadasMongoDB(calendarView);
+        // Limpar decoradores existentes
+        binding.calendarView.removeDecorators();
+
+        // Reaplicar decoradores base
+        configurarAparenciaCalendario();
+
+        // Carregar paradas do MongoDB (paradas em andamento) - VERMELHO
+        carregarParadasMongoDB();
 
         // Carregar paradas do SQL (paradas finalizadas) - VERDE
-        carregarParadasSQL(calendarView);
+        carregarParadasSQL();
     }
 
-    private void carregarParadasMongoDB(MaterialCalendarView calendarView) {
+    private void carregarParadasMongoDB() {
         Log.d("CalendarFragment", "Buscando paradas EM ANDAMENTO do MongoDB...");
 
         Call<List<RegistroParadaResponseDTO>> call = mongoApiService.getAllRegistros();
@@ -151,37 +226,34 @@ public class CalendarFragment extends Fragment {
                     List<RegistroParadaResponseDTO> paradasMongo = response.body();
                     Log.d("CalendarFragment", "Paradas EM ANDAMENTO encontradas: " + paradasMongo.size());
 
-                    List<Parada> paradasEmAndamento = new ArrayList<>();
-
                     for (RegistroParadaResponseDTO registro : paradasMongo) {
                         Parada parada = converterParaParada(registro);
-                        parada.setTipo("EM_ANDAMENTO"); // Marcar como em andamento
+                        parada.setTipo("EM_ANDAMENTO");
 
                         if (deveMostrarParada(parada)) {
-                            paradasEmAndamento.add(parada);
                             todasParadas.add(parada);
-                            Log.d("CalendarFragment", "Parada EM ANDAMENTO - Data: " +
-                                    parada.getDt_parada() + ", Setor: " + parada.getDes_setor());
+                            adicionarDataAoMapa(parada.getDt_parada(), "EM_ANDAMENTO");
                         }
                     }
 
-                    // Marcar datas no calendário com cor LARANJA
-                    marcarParadasNoCalendario(calendarView, paradasEmAndamento, COR_EM_ANDAMENTO, "EM_ANDAMENTO");
-                    atualizarUI(calendarView);
+                    aplicarDecoradoresEventos();
+                    atualizarUI();
 
                 } else {
                     Log.e("CalendarFragment", "Erro ao buscar paradas MongoDB: " + response.code());
+                    mostrarMensagemErro("Erro ao carregar paradas em andamento");
                 }
             }
 
             @Override
             public void onFailure(Call<List<RegistroParadaResponseDTO>> call, Throwable t) {
                 Log.e("CalendarFragment", "Falha ao buscar paradas MongoDB: " + t.getMessage());
+                mostrarMensagemErro("Falha na conexão com servidor");
             }
         });
     }
 
-    private void carregarParadasSQL(MaterialCalendarView calendarView) {
+    private void carregarParadasSQL() {
         Log.d("CalendarFragment", "Buscando paradas FINALIZADAS do SQL...");
 
         Call<List<ParadaSQLResponseDTO>> call = sqlApiService.listarTodasParadas();
@@ -192,44 +264,170 @@ public class CalendarFragment extends Fragment {
                     List<ParadaSQLResponseDTO> paradasSQL = response.body();
                     Log.d("CalendarFragment", "Paradas FINALIZADAS encontradas: " + paradasSQL.size());
 
-                    List<Parada> paradasFinalizadas = new ArrayList<>();
-
                     for (ParadaSQLResponseDTO registro : paradasSQL) {
                         Parada parada = converterParaParada(registro);
                         parada.setTipo("FINALIZADA");
 
                         if (deveMostrarParada(parada)) {
-                            paradasFinalizadas.add(parada);
                             todasParadas.add(parada);
-                            Log.d("CalendarFragment", "Parada FINALIZADA - Data: " +
-                                    parada.getDt_parada() + ", Setor: " + parada.getDes_setor());
+                            adicionarDataAoMapa(parada.getDt_parada(), "FINALIZADA");
                         }
                     }
 
-                    marcarParadasNoCalendario(calendarView, paradasFinalizadas, COR_FINALIZADA, "FINALIZADA");
-                    atualizarUI(calendarView);
+                    aplicarDecoradoresEventos();
+                    atualizarUI();
 
                 } else {
                     Log.e("CalendarFragment", "Erro ao buscar paradas SQL: " + response.code());
-                    // Log do erro detalhado
-                    if (response.errorBody() != null) {
-                        try {
-                            String errorBody = response.errorBody().string();
-                            Log.e("CalendarFragment", "Corpo do erro: " + errorBody);
-                        } catch (Exception e) {
-                            Log.e("CalendarFragment", "Erro ao ler corpo do erro", e);
-                        }
-                    }
+                    mostrarMensagemErro("Erro ao carregar paradas finalizadas");
                 }
             }
 
             @Override
             public void onFailure(Call<List<ParadaSQLResponseDTO>> call, Throwable t) {
                 Log.e("CalendarFragment", "Falha ao buscar paradas SQL: " + t.getMessage());
+                mostrarMensagemErro("Falha na conexão com banco de dados");
             }
         });
     }
 
+    private void adicionarDataAoMapa(Date data, String tipo) {
+        if (data == null) return;
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(data);
+        CalendarDay dia = CalendarDay.from(calendar);
+
+        if (tipo.equals("EM_ANDAMENTO")) {
+            // Se já existe finalizada, mover para misto
+            if (datasFinalizadas.contains(dia)) {
+                datasFinalizadas.remove(dia);
+                datasMistas.add(dia);
+            } else if (!datasMistas.contains(dia)) {
+                datasEmAndamento.add(dia);
+            }
+        } else if (tipo.equals("FINALIZADA")) {
+            // Se já existe em andamento, mover para misto
+            if (datasEmAndamento.contains(dia)) {
+                datasEmAndamento.remove(dia);
+                datasMistas.add(dia);
+            } else if (!datasMistas.contains(dia)) {
+                datasFinalizadas.add(dia);
+            }
+        }
+    }
+
+    private void aplicarDecoradoresEventos() {
+        // Aplicar decoradores para cada tipo de data
+        if (!datasEmAndamento.isEmpty()) {
+            binding.calendarView.addDecorator(new EventoDecorador(
+                    new ArrayList<>(datasEmAndamento),
+                    criarDrawableEvento(COR_EM_ANDAMENTO),
+                    "Em Andamento"
+            ));
+        }
+
+        if (!datasFinalizadas.isEmpty()) {
+            binding.calendarView.addDecorator(new EventoDecorador(
+                    new ArrayList<>(datasFinalizadas),
+                    criarDrawableEvento(COR_FINALIZADA),
+                    "Finalizada"
+            ));
+        }
+
+        if (!datasMistas.isEmpty()) {
+            binding.calendarView.addDecorator(new EventoDecorador(
+                    new ArrayList<>(datasMistas),
+                    criarDrawableEvento(COR_MISTA),
+                    "Mista"
+            ));
+        }
+
+        // Aplicar decorador de seleção se houver data selecionada
+        if (dataSelecionadaAtual != null) {
+            binding.calendarView.addDecorator(new SelecaoDecorador(dataSelecionadaAtual));
+        }
+
+        // Adicionar legenda
+        adicionarLegenda();
+    }
+
+    private Drawable criarDrawableEvento(int cor) {
+        GradientDrawable drawable = new GradientDrawable();
+        drawable.setShape(GradientDrawable.OVAL);
+        drawable.setColor(cor);
+        drawable.setStroke(2, Color.WHITE);
+        drawable.setSize(36, 36);
+        return drawable;
+    }
+
+    private Drawable criarDrawableEventoComSelecao(int corEvento, boolean selecionado) {
+        if (selecionado) {
+            // Criar layer drawable com evento + borda de seleção
+            GradientDrawable eventoDrawable = new GradientDrawable();
+            eventoDrawable.setShape(GradientDrawable.OVAL);
+            eventoDrawable.setColor(corEvento);
+            eventoDrawable.setSize(36, 36);
+
+            GradientDrawable selecaoDrawable = new GradientDrawable();
+            selecaoDrawable.setShape(GradientDrawable.OVAL);
+            selecaoDrawable.setColor(Color.TRANSPARENT);
+            selecaoDrawable.setStroke(3, COR_SELECAO);
+            selecaoDrawable.setSize(42, 42);
+
+            Drawable[] layers = {eventoDrawable, selecaoDrawable};
+            LayerDrawable layerDrawable = new LayerDrawable(layers);
+            layerDrawable.setLayerInset(0, 3, 3, 3, 3); // Centralizar o evento dentro da seleção
+
+            return layerDrawable;
+        } else {
+            return criarDrawableEvento(corEvento);
+        }
+    }
+
+    private void adicionarLegenda() {
+        // Verificar se o container de legenda existe no layout
+        if (binding.containerLegenda == null) {
+            return;
+        }
+
+        View legendaView = getLayoutInflater().inflate(com.aula.mobile_hivemind.R.layout.legenda_calendario,
+                binding.containerLegenda, false);
+
+        TextView legendaMongo = legendaView.findViewById(com.aula.mobile_hivemind.R.id.legenda_mongo);
+        TextView legendaSQL = legendaView.findViewById(com.aula.mobile_hivemind.R.id.legenda_sql);
+        TextView legendaMista = legendaView.findViewById(com.aula.mobile_hivemind.R.id.legenda_mista);
+
+        if (legendaMongo != null) {
+            GradientDrawable drawable = new GradientDrawable();
+            drawable.setShape(GradientDrawable.OVAL);
+            drawable.setColor(COR_EM_ANDAMENTO);
+            drawable.setSize(20, 20);
+            legendaMongo.setCompoundDrawablesWithIntrinsicBounds(drawable, null, null, null);
+        }
+
+        if (legendaSQL != null) {
+            GradientDrawable drawable = new GradientDrawable();
+            drawable.setShape(GradientDrawable.OVAL);
+            drawable.setColor(COR_FINALIZADA);
+            drawable.setSize(20, 20);
+            legendaSQL.setCompoundDrawablesWithIntrinsicBounds(drawable, null, null, null);
+        }
+
+        if (legendaMista != null) {
+            GradientDrawable drawable = new GradientDrawable();
+            drawable.setShape(GradientDrawable.OVAL);
+            drawable.setColor(COR_MISTA);
+            drawable.setSize(20, 20);
+            legendaMista.setCompoundDrawablesWithIntrinsicBounds(drawable, null, null, null);
+        }
+
+        // Adicionar legenda ao layout
+        binding.containerLegenda.removeAllViews();
+        binding.containerLegenda.addView(legendaView);
+    }
+
+    // MÉTODOS DE CONVERSÃO E VALIDAÇÃO
     private Parada converterParaParada(RegistroParadaResponseDTO registro) {
         Parada parada = new Parada(
                 registro.getId(),
@@ -304,60 +502,30 @@ public class CalendarFragment extends Fragment {
         return true;
     }
 
-    private void atualizarUI(MaterialCalendarView calendarView) {
+    private void atualizarUI() {
         Log.d("CalendarFragment", "Total de paradas carregadas: " + todasParadas.size());
 
         // Atualizar adapter
         paradaCalendarAdapter.updateData(todasParadas);
 
-        // Mostrar mensagem se não houver paradas
-        if (todasParadas.isEmpty()) {
-            Toast.makeText(getContext(), "Nenhuma parada encontrada", Toast.LENGTH_SHORT).show();
-        }
-    }
+        // Mostrar resumo
+        if (!todasParadas.isEmpty()) {
+            int emAndamento = 0;
+            int finalizadas = 0;
 
-    private void marcarParadasNoCalendario(MaterialCalendarView calendarView, List<Parada> paradas, int cor, String tipo) {
-        Map<CalendarDay, Integer> mapaCores = new HashMap<>();
-
-        for (Parada parada : paradas) {
-            if (parada.getDt_parada() != null) {
-                try {
-                    Date date = parada.getDt_parada();
-                    Calendar calendar = Calendar.getInstance();
-                    calendar.setTime(date);
-                    CalendarDay dia = CalendarDay.from(calendar);
-
-                    // Verificar se já existe uma cor para este dia
-                    Integer corExistente = mapaCores.get(dia);
-
-                    if (corExistente == null) {
-                        // Primeira parada neste dia - usar a cor do tipo atual
-                        mapaCores.put(dia, cor);
-                        Log.d("CalendarFragment", "Marcando dia " + dia + " com cor " + tipo);
-                    } else if (corExistente != cor) {
-                        // Dia com ambos os tipos - usar cor mista
-                        mapaCores.put(dia, COR_MISTA);
-                        Log.d("CalendarFragment", "Dia " + dia + " tem ambos os tipos - usando cor mista");
-                    }
-
-                } catch (Exception e) {
-                    Log.e("CalendarFragment", "Erro ao processar data da parada", e);
+            for (Parada parada : todasParadas) {
+                if ("EM_ANDAMENTO".equals(parada.getTipo())) {
+                    emAndamento++;
+                } else if ("FINALIZADA".equals(parada.getTipo())) {
+                    finalizadas++;
                 }
             }
-        }
 
-        // Aplicar decoradores para cada dia
-        for (Map.Entry<CalendarDay, Integer> entry : mapaCores.entrySet()) {
-            List<CalendarDay> datas = new ArrayList<>();
-            datas.add(entry.getKey());
-
-            String tipoDesc = "";
-            if (entry.getValue() == COR_EM_ANDAMENTO) tipoDesc = "EM ANDAMENTO";
-            else if (entry.getValue() == COR_FINALIZADA) tipoDesc = "FINALIZADA";
-            else tipoDesc = "AMBOS";
-
-            calendarView.addDecorator(new EventoDecorador(datas,
-                    new ColorDrawable(entry.getValue()), tipoDesc));
+            String resumo = String.format("✓ %d paradas carregadas (%d em andamento, %d finalizadas)",
+                    todasParadas.size(), emAndamento, finalizadas);
+            mostrarMensagemSucesso(resumo);
+        } else {
+            mostrarMensagemInfo("Nenhuma parada encontrada para seus filtros");
         }
     }
 
@@ -383,15 +551,22 @@ public class CalendarFragment extends Fragment {
         }
 
         paradaCalendarAdapter.updateData(filtradas);
-        Log.d("CalendarFragment", "Paradas filtradas para " + dataSelecionada + ": " + filtradas.size());
 
-        // Mostrar tooltip com tipos de paradas
         if (!filtradas.isEmpty()) {
-            mostrarTooltipTiposParadas(filtradas);
+            mostrarTooltipTiposParadas(filtradas, dataSelecionada);
+        } else {
+            mostrarMensagemInfo("Nenhuma parada para " + formatarData(dataSelecionada));
         }
     }
 
-    private void mostrarTooltipTiposParadas(List<Parada> paradas) {
+    private String formatarData(CalendarDay data) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(data.getYear(), data.getMonth(), data.getDay());
+        SimpleDateFormat format = new SimpleDateFormat("dd/MM/yyyy", new Locale("pt", "BR"));
+        return format.format(calendar.getTime());
+    }
+
+    private void mostrarTooltipTiposParadas(List<Parada> paradas, CalendarDay data) {
         int emAndamento = 0;
         int finalizadas = 0;
 
@@ -403,52 +578,64 @@ public class CalendarFragment extends Fragment {
             }
         }
 
-        String mensagem = "Paradas: ";
-        if (emAndamento > 0) {
-            mensagem += emAndamento + " em andamento ";
-        }
-        if (finalizadas > 0) {
-            mensagem += finalizadas + " finalizadas";
-        }
+        String mensagem = String.format("%s\n● %d em andamento\n● %d finalizadas",
+                formatarData(data), emAndamento, finalizadas);
 
-        Toast.makeText(getContext(), mensagem, Toast.LENGTH_SHORT).show();
+        CustomToast.showInfo(getContext(), mensagem);
     }
 
-    private void decorateOtherMonthDays(MaterialCalendarView calendarView) {
-        calendarView.addDecorator(new DayViewDecorator() {
-            @Override
-            public boolean shouldDecorate(CalendarDay day) {
-                Calendar currentCalendar = Calendar.getInstance();
-                Calendar dayCalendar = day.getCalendar();
-                return dayCalendar.get(Calendar.MONTH) != currentCalendar.get(Calendar.MONTH) ||
-                        dayCalendar.get(Calendar.YEAR) != currentCalendar.get(Calendar.YEAR);
-            }
-
-            @Override
-            public void decorate(DayViewFacade view) {
-                view.addSpan(new ForegroundColorSpan(Color.GRAY));
-            }
-        });
+    private void mostrarMensagemSucesso(String mensagem) {
+        CustomToast.showSuccess(getContext(), mensagem);
     }
 
-    // Decorador para o mês atual
-    private class CurrentMonthDecorator implements DayViewDecorator {
+    private void mostrarMensagemErro(String mensagem) {
+        CustomToast.showError(getContext(), mensagem);
+    }
+
+    private void mostrarMensagemInfo(String mensagem) {
+        CustomToast.showInfo(getContext(), mensagem);
+    }
+
+    private class DiaAtualDecorador implements DayViewDecorator {
+        private final CalendarDay hoje;
+
+        public DiaAtualDecorador() {
+            this.hoje = CalendarDay.today();
+        }
+
         @Override
         public boolean shouldDecorate(CalendarDay day) {
-            Calendar currentCalendar = Calendar.getInstance();
-            Calendar dayCalendar = day.getCalendar();
-            return dayCalendar.get(Calendar.MONTH) == currentCalendar.get(Calendar.MONTH) &&
-                    dayCalendar.get(Calendar.YEAR) == currentCalendar.get(Calendar.YEAR);
+            return hoje.equals(day);
         }
 
         @Override
         public void decorate(DayViewFacade view) {
-            view.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-            view.addSpan(new ForegroundColorSpan(Color.BLACK));
+            GradientDrawable drawable = new GradientDrawable();
+            drawable.setShape(GradientDrawable.OVAL);
+            drawable.setColor(Color.TRANSPARENT);
+            drawable.setStroke(4, COR_SELECAO);
+            view.setBackgroundDrawable(drawable);
+            view.addSpan(new ForegroundColorSpan(COR_TEXTO_PRIMARIO));
+            view.addSpan(new StyleSpan(Typeface.BOLD));
         }
     }
 
-    // Decorador para eventos com tipo
+    private class DiasOutrosMesesDecorador implements DayViewDecorator {
+        @Override
+        public boolean shouldDecorate(CalendarDay day) {
+            Calendar currentCalendar = Calendar.getInstance();
+            Calendar dayCalendar = day.getCalendar();
+            return dayCalendar.get(Calendar.MONTH) != currentCalendar.get(Calendar.MONTH) ||
+                    dayCalendar.get(Calendar.YEAR) != currentCalendar.get(Calendar.YEAR);
+        }
+
+        @Override
+        public void decorate(DayViewFacade view) {
+            view.addSpan(new ForegroundColorSpan(COR_TEXTO_SECUNDARIO));
+            view.addSpan(new RelativeSizeSpan(0.8f));
+        }
+    }
+
     private class EventoDecorador implements DayViewDecorator {
         private final List<CalendarDay> dates;
         private final Drawable drawable;
@@ -469,6 +656,30 @@ public class CalendarFragment extends Fragment {
         public void decorate(DayViewFacade view) {
             view.setBackgroundDrawable(drawable);
             view.addSpan(new ForegroundColorSpan(Color.WHITE));
+            view.addSpan(new StyleSpan(Typeface.BOLD));
+        }
+    }
+
+    private class SelecaoDecorador implements DayViewDecorator {
+        private final CalendarDay selectedDay;
+
+        public SelecaoDecorador(CalendarDay selectedDay) {
+            this.selectedDay = selectedDay;
+        }
+
+        @Override
+        public boolean shouldDecorate(CalendarDay day) {
+            return selectedDay.equals(day);
+        }
+
+        @Override
+        public void decorate(DayViewFacade view) {
+            // Apenas adiciona a borda de seleção, não sobrepõe o fundo
+            GradientDrawable drawable = new GradientDrawable();
+            drawable.setShape(GradientDrawable.OVAL);
+            drawable.setColor(Color.TRANSPARENT);
+            drawable.setStroke(3, COR_SELECAO);
+            view.setBackgroundDrawable(drawable);
         }
     }
 

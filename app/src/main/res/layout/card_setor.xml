@@ -32,7 +32,7 @@
             android:layout_alignParentEnd="true"
             android:background="@drawable/bg_icon_circle"
             android:padding="6dp"
-            android:src="@drawable/ic_exclamation"
+            android:src="@drawable/ic_warning"
             app:tint="#0051FF"
             android:contentDescription="Alerta" />
 

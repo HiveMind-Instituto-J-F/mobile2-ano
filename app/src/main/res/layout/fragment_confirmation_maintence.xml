@@ -13,7 +13,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="100dp"
-        android:src="@drawable/ic_success"
+        android:src="@drawable/ic_confirmation_screen_success"
         app:layout_constraintBottom_toTopOf="@+id/txtPrincipal"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.498"
