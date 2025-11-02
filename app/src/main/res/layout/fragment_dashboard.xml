@@ -1,212 +1,308 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/background_2"
-    tools:context=".ui.dashboard.DashboardFragment">
+    android:background="@color/white_off"
+    android:padding="16dp">
 
-    <!-- Cabeçalho (Fixo no topo da tela) -->
-    <FrameLayout
-        android:id="@+id/headerLayout"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        app:layout_constraintTop_toTopOf="parent">
+        android:orientation="vertical">
 
-        <TextView
-            android:id="@+id/textView3"
+        <ProgressBar
+            android:id="@+id/progressBar"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:fontFamily="@font/lexend_deca_semibold"
-            android:text="Dashboard"
-            android:textColor="#FFFFFF"
-            android:textSize="19sp" />
+            android:visibility="gone"
+            android:indeterminateTint="@color/blue_primary" />
 
-    </FrameLayout>
-
-    <!-- Card resumo (Fixo, posicionado logo abaixo do cabeçalho) -->
-    <com.google.android.material.card.MaterialCardView
-        android:id="@+id/materialCardView"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginEnd="16dp"
-        app:cardBackgroundColor="@color/black"
-        app:cardCornerRadius="12dp"
-        app:cardElevation="0dp"
-        app:layout_constraintTop_toBottomOf="@id/headerLayout">
-
-        <FrameLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-
-            <ImageView
-                android:layout_width="match_parent"
-                android:layout_height="120dp"
-                android:scaleType="centerCrop"
-                android:src="@drawable/card_background" />
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="120dp"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:padding="16dp">
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:id="@+id/textResumoTitulo"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:fontFamily="@font/roboto"
-                        android:text="Quantidade de\nparadas registradas:"
-                        android:textColor="#FFFFFF"
-                        android:textSize="16sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:id="@+id/textData"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:fontFamily="@font/roboto"
-                        android:text="Mês tal"
-                        android:textColor="#FFFFFF"
-                        android:textSize="14sp" />
-                </LinearLayout>
-
-                <TextView
-                    android:id="@+id/textResumoNumero"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:fontFamily="@font/roboto"
-                    android:textColor="#FFFFFF"
-                    android:textSize="40sp"
-                    android:textStyle="bold" />
-            </LinearLayout>
-        </FrameLayout>
-    </com.google.android.material.card.MaterialCardView>
-
-    <!-- ESTA É A MUDANÇA: O txtPorcent agora está fixo, abaixo do MaterialCardView -->
-    <TextView
-        android:id="@+id/txtPorcent"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:layout_marginStart="16dp"
-        android:text="% de parada a menos q o ultimo dia"
-        android:textColor="#FFFFFF"
-        app:layout_constraintTop_toBottomOf="@id/materialCardView"
-        app:layout_constraintStart_toStartOf="parent" />
-
-    <!-- ScrollView para os gráficos (agora inicia abaixo do texto de porcentagem) -->
-    <ScrollView
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_marginTop="25dp"
-        android:fillViewport="true"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/txtPorcent"
-        app:layout_constraintVertical_bias="1.0">
-
+        <!-- Header -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="16dp">
+            android:layout_marginBottom="24dp"
+            android:gravity="center">
 
-            <!-- Card para os gráficos (Dentro do ScrollView) -->
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/chartCard"
+            <TextView
+                android:id="@+id/textTituloDashboard"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                app:cardBackgroundColor="#24252C"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="0dp">
+                android:text="Dashboard"
+                android:textSize="28sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:textColor="@color/blue_dark"
+                android:fontFamily="@font/lexend_deca_medium" />
+
+            <TextView
+                android:id="@+id/textPeriodo"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Visão geral do mês atual"
+                android:textSize="14sp"
+                android:gravity="center"
+                android:textColor="@color/gray_dark"
+                android:layout_marginTop="4dp"
+                android:fontFamily="@font/lexend_deca" />
+        </LinearLayout>
+
+        <!-- Cards de Métricas -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Indicadores Principais"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="@color/blue_dark"
+            android:layout_marginBottom="16dp"
+            android:fontFamily="@font/lexend_deca_semibold" />
+
+        <!-- Card 1: Total Paradas e Tempo Médio -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:elevation="4dp"
+            app:cardCornerRadius="16dp"
+            app:cardBackgroundColor="@color/white_off">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:padding="20dp"
+                android:background="@drawable/bg_card_gradient">
+
+                <!-- Total Paradas -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:gravity="center">
+
+                    <ImageView
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:src="@drawable/ic_paradas"
+                        android:tint="@color/blue_primary" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Total Paradas"
+                        android:textSize="12sp"
+                        android:textColor="@color/gray_dark"
+                        android:layout_marginTop="8dp"
+                        android:fontFamily="@font/lexend_deca" />
+
+                    <TextView
+                        android:id="@+id/textTotalParadas"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="0"
+                        android:textSize="28sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/blue_primary"
+                        android:layout_marginTop="4dp"
+                        android:fontFamily="@font/lexend_deca_semibold" />
+                </LinearLayout>
+
+                <!-- Divider -->
+                <View
+                    android:layout_width="1dp"
+                    android:layout_height="40dp"
+                    android:background="@color/blue_primary"
+                    android:alpha="0.2"
+                    android:layout_gravity="center" />
+
+                <!-- Tempo Médio -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:gravity="center">
+
+                    <ImageView
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:src="@drawable/ic_tempo"
+                        android:tint="@color/orange_accent" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Tempo Médio"
+                        android:textSize="12sp"
+                        android:textColor="@color/gray_dark"
+                        android:layout_marginTop="8dp"
+                        android:fontFamily="@font/lexend_deca" />
+
+                    <TextView
+                        android:id="@+id/textTempoMedio"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="0 min"
+                        android:textSize="20sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/orange_accent"
+                        android:layout_marginTop="4dp"
+                        android:fontFamily="@font/lexend_deca_semibold" />
+                </LinearLayout>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- Card 2: Máquina e Setor Problemáticos -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="24dp"
+            android:elevation="4dp"
+            app:cardCornerRadius="16dp"
+            app:cardBackgroundColor="@color/white_off">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="20px"
+                android:background="@drawable/bg_card_gradient">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Análise de Problemas"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/blue_dark"
+                    android:layout_marginBottom="16dp"
+                    android:fontFamily="@font/lexend_deca_semibold" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
+                    android:orientation="horizontal">
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:fontFamily="@font/lexend_deca_semibold"
-                        android:text="Gráfico de paradas"
-                        android:textColor="#FFFFFF"
-                        android:textSize="18sp" />
-
-                    <!-- Botões de Setores e Máquinas (Dentro do ScrollView) -->
+                    <!-- Máquina Problemática -->
                     <LinearLayout
-                        android:layout_width="match_parent"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="16dp"
-                        android:background="@drawable/rounded_button_background"
-                        android:orientation="horizontal"
-                        android:padding="4dp">
+                        android:layout_weight="1"
+                        android:orientation="vertical">
 
-                        <Button
-                            android:layout_width="0dp"
+                        <LinearLayout
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:background="@drawable/active_button_background"
-                            android:text="Setores"
-                            android:textColor="@color/black" />
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:layout_marginBottom="8dp">
 
+                            <ImageView
+                                android:layout_width="20dp"
+                                android:layout_height="20dp"
+                                android:src="@drawable/ic_maquina"
+                                android:tint="@color/blue_primary" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Máquina com Mais Paradas"
+                                android:textSize="12sp"
+                                android:textColor="@color/gray_dark"
+                                android:layout_marginStart="8dp"
+                                android:fontFamily="@font/lexend_deca" />
+                        </LinearLayout>
+
+                        <TextView
+                            android:id="@+id/textMaquinaProblema"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Nenhuma"
+                            android:textSize="14sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/blue_dark"
+                            android:background="@drawable/bg_chip"
+                            android:padding="8dp"
+                            android:fontFamily="@font/lexend_deca_semibold" />
                     </LinearLayout>
 
-                    <!-- Gráfico de rosca (Dentro do ScrollView) -->
-                    <com.github.mikephil.charting.charts.PieChart
-                        android:id="@+id/pieChart"
-                        android:layout_width="match_parent"
-                        android:layout_height="250dp"
-                        android:layout_marginTop="16dp" />
-
-                    <!-- Texto no centro do gráfico (Dentro do ScrollView) -->
-                    <TextView
-                        android:id="@+id/centerText"
-                        android:layout_width="wrap_content"
+                    <!-- Setor Problemático -->
+                    <LinearLayout
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_gravity="center_horizontal"
-                        android:textColor="#FFFFFF"
-                        android:textSize="24sp"
-                        android:textStyle="bold"
-                        android:translationY="-150dp" />
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:layout_marginStart="16dp">
 
-                    <!-- Título das barras de progresso (Dentro do ScrollView) -->
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="16dp"
-                        android:text="Quantidade de horas perdidas por setor"
-                        android:textColor="#FFFFFF"
-                        android:textSize="14sp" />
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:layout_marginBottom="8dp">
 
-                    <!-- RecyclerView para as barras de progresso (Dentro do ScrollView) -->
-                    <androidx.recyclerview.widget.RecyclerView
-                        android:id="@+id/recyclerViewProgressBars"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp" />
+                            <ImageView
+                                android:layout_width="20dp"
+                                android:layout_height="20dp"
+                                android:src="@drawable/ic_setor"
+                                android:tint="@color/orange_accent" />
 
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Setor com Mais Paradas"
+                                android:textSize="12sp"
+                                android:textColor="@color/gray_dark"
+                                android:layout_marginStart="8dp"
+                                android:fontFamily="@font/lexend_deca" />
+                        </LinearLayout>
+
+                        <TextView
+                            android:id="@+id/textSetorProblema"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Nenhum"
+                            android:textSize="14sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/blue_dark"
+                            android:background="@drawable/bg_chip"
+                            android:padding="8dp"
+                            android:fontFamily="@font/lexend_deca_semibold" />
+                    </LinearLayout>
                 </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
 
-        </LinearLayout>
-    </ScrollView>
-</androidx.constraintlayout.widget.ConstraintLayout>
+        <!-- Gráfico de Evolução Mensal -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Evolução Mensal"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="@color/blue_dark"
+            android:layout_marginBottom="8dp"
+            android:fontFamily="@font/lexend_deca_semibold" />
+
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="300dp"
+            android:layout_marginBottom="16dp"
+            android:elevation="4dp"
+            app:cardCornerRadius="16dp"
+            app:cardBackgroundColor="@color/white_off">
+
+            <com.github.mikephil.charting.charts.LineChart
+                android:id="@+id/lineChartEvolucao"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:padding="16dp" />
+        </androidx.cardview.widget.CardView>
+
+    </LinearLayout>
+</ScrollView>

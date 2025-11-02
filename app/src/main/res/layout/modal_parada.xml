@@ -1,283 +1,499 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:padding="16dp"
-    android:gravity="center_horizontal">
+    android:background="@color/white_off"
+    android:padding="0dp">
 
-    <!-- Cabeçalho -->
-    <RelativeLayout
+    <!-- Header com gradiente -->
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp">
+        android:orientation="horizontal"
+        android:background="@drawable/bg_gradient_header"
+        android:padding="20dp"
+        android:gravity="center_vertical">
 
         <TextView
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_weight="1"
             android:text="Detalhes da Parada"
+            android:textColor="@color/white_off"
             android:textSize="20sp"
             android:textStyle="bold"
             android:gravity="center"
-            android:layout_centerHorizontal="true" />
+            android:fontFamily="@font/lexend_deca_medium" />
 
         <ImageButton
             android:id="@+id/btnFechar"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@android:drawable/ic_menu_close_clear_cancel"
-            android:background="?android:attr/selectableItemBackgroundBorderless"
-            android:layout_alignParentEnd="true"
-            android:layout_centerVertical="true" />
-
-    </RelativeLayout>
-
-    <!-- Container das informações -->
-    <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:gravity="center">
-
-        <!-- Nome da Máquina -->
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginBottom="12dp"
-            android:gravity="center">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Nome da Máquina:"
-                android:textStyle="bold"
-                android:textColor="@color/black"
-                android:paddingEnd="8dp" />
-
-            <TextView
-                android:id="@+id/txtNomeMaquina"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="-"
-                android:textColor="@color/black" />
-
-        </LinearLayout>
-
-        <!-- ID da Máquina -->
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginBottom="12dp"
-            android:gravity="center">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="ID da Máquina:"
-                android:textStyle="bold"
-                android:textColor="@color/black"
-                android:paddingEnd="8dp" />
-
-            <TextView
-                android:id="@+id/txtIdMaquina"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="-"
-                android:textColor="@color/black" />
-
-        </LinearLayout>
-
-        <!-- Código do Colaborador -->
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginBottom="12dp"
-            android:gravity="center">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Código do Colaborador:"
-                android:textStyle="bold"
-                android:textColor="@color/black"
-                android:paddingEnd="8dp" />
-
-            <TextView
-                android:id="@+id/txtCodigoColaborador"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="-"
-                android:textColor="@color/black" />
-
-        </LinearLayout>
-
-        <!-- Data da Parada -->
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginBottom="12dp"
-            android:gravity="center">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Data da Parada:"
-                android:textStyle="bold"
-                android:textColor="@color/black"
-                android:paddingEnd="8dp" />
-
-            <TextView
-                android:id="@+id/txtData"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="-"
-                android:textColor="@color/black" />
-
-        </LinearLayout>
-
-        <!-- Hora de Início -->
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginBottom="12dp"
-            android:gravity="center">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Hora de Início:"
-                android:textStyle="bold"
-                android:textColor="@color/black"
-                android:paddingEnd="8dp" />
-
-            <TextView
-                android:id="@+id/txtHoraInicio"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="-"
-                android:textColor="@color/black" />
-
-        </LinearLayout>
-
-        <!-- Hora de Término -->
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginBottom="12dp"
-            android:gravity="center">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Hora de Término:"
-                android:textStyle="bold"
-                android:textColor="@color/black"
-                android:paddingEnd="8dp" />
-
-            <TextView
-                android:id="@+id/txtHoraFim"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="-"
-                android:textColor="@color/black" />
-
-        </LinearLayout>
-
-        <!-- Duração -->
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginBottom="12dp"
-            android:gravity="center">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Duração:"
-                android:textStyle="bold"
-                android:textColor="@color/black"
-                android:paddingEnd="8dp" />
-
-            <TextView
-                android:id="@+id/txtDuracao"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="-"
-                android:textColor="@color/black" />
-
-        </LinearLayout>
-
-        <!-- Setor -->
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginBottom="12dp"
-            android:gravity="center">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Setor:"
-                android:textStyle="bold"
-                android:textColor="@color/black"
-                android:paddingEnd="8dp" />
-
-            <TextView
-                android:id="@+id/txtSetor"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="-"
-                android:textColor="@color/black" />
-
-        </LinearLayout>
-
-        <!-- Descrição da Parada -->
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:layout_marginBottom="8dp"
-            android:gravity="center">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Descrição da Parada:"
-                android:textStyle="bold"
-                android:textColor="@color/black"
-                android:layout_marginBottom="8dp"
-                android:gravity="center" />
-
-            <TextView
-                android:id="@+id/txtDescricao"
-                android:layout_width="280dp"
-                android:layout_height="wrap_content"
-                android:text="-"
-                android:background="@drawable/edit_text_border"
-                android:padding="12dp"
-                android:minHeight="100dp"
-                android:textColor="@color/black"
-                android:gravity="center"
-                android:textAlignment="center" />
-
-        </LinearLayout>
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:src="@drawable/ic_close"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:tint="@color/white_off"
+            android:contentDescription="Fechar" />
 
     </LinearLayout>
 
-    <Button
-        android:id="@+id/btnFinalizarParada"
-        android:layout_width="wrap_content"
+    <!-- Conteúdo -->
+    <ScrollView
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Finalizar Parada"
-        android:textColor="@color/white"
-        android:visibility="gone" />
+        android:padding="20dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- Card de Informações Principais -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="2dp"
+                app:cardBackgroundColor="@color/white_off">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Informações da Máquina"
+                        android:textColor="@color/blue_dark"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="12dp"
+                        android:fontFamily="@font/lexend_deca_semibold" />
+
+                    <!-- Nome da Máquina -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="8dp"
+                        android:gravity="center_vertical">
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_maquina"
+                            android:tint="@color/blue_primary"
+                            android:layout_marginEnd="8dp" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Nome da Máquina:"
+                            android:textColor="@color/gray_dark"
+                            android:textSize="14sp"
+                            android:fontFamily="@font/lexend_deca_semibold" />
+
+                        <TextView
+                            android:id="@+id/txtNomeMaquina"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="-"
+                            android:textColor="@color/blue_dark"
+                            android:textSize="14sp"
+                            android:gravity="end"
+                            android:fontFamily="@font/lexend_deca" />
+
+                    </LinearLayout>
+
+                    <!-- ID da Máquina -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="8dp"
+                        android:gravity="center_vertical">
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_id"
+                            android:tint="@color/blue_primary"
+                            android:layout_marginEnd="8dp" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="ID da Máquina:"
+                            android:textColor="@color/gray_dark"
+                            android:textSize="14sp"
+                            android:fontFamily="@font/lexend_deca_semibold" />
+
+                        <TextView
+                            android:id="@+id/txtIdMaquina"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="-"
+                            android:textColor="@color/blue_dark"
+                            android:textSize="14sp"
+                            android:gravity="end"
+                            android:fontFamily="@font/lexend_deca" />
+
+                    </LinearLayout>
+
+                    <!-- Setor -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="8dp"
+                        android:gravity="center_vertical">
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_setor"
+                            android:tint="@color/blue_primary"
+                            android:layout_marginEnd="8dp" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Setor:"
+                            android:textColor="@color/gray_dark"
+                            android:textSize="14sp"
+                            android:fontFamily="@font/lexend_deca_semibold" />
+
+                        <TextView
+                            android:id="@+id/txtSetor"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="-"
+                            android:textColor="@color/blue_dark"
+                            android:textSize="14sp"
+                            android:gravity="end"
+                            android:fontFamily="@font/lexend_deca" />
+
+                    </LinearLayout>
+
+                    <!-- Código do Colaborador -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_user"
+                            android:tint="@color/blue_primary"
+                            android:layout_marginEnd="8dp" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Código do Colaborador:"
+                            android:textColor="@color/gray_dark"
+                            android:textSize="14sp"
+                            android:fontFamily="@font/lexend_deca_semibold" />
+
+                        <TextView
+                            android:id="@+id/txtCodigoColaborador"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="-"
+                            android:textColor="@color/blue_dark"
+                            android:textSize="14sp"
+                            android:gravity="end"
+                            android:fontFamily="@font/lexend_deca" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Card de Datas e Horários -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="2dp"
+                app:cardBackgroundColor="@color/white_off">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Datas e Horários"
+                        android:textColor="@color/blue_dark"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="12dp"
+                        android:fontFamily="@font/lexend_deca_semibold" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="12dp">
+
+                        <!-- Data -->
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:gravity="center"
+                            android:background="@drawable/bg_info_item"
+                            android:padding="12dp">
+
+                            <ImageView
+                                android:layout_width="24dp"
+                                android:layout_height="24dp"
+                                android:src="@drawable/ic_calendar"
+                                android:tint="@color/blue_primary"
+                                android:layout_marginBottom="4dp" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Data"
+                                android:textColor="@color/gray_dark"
+                                android:textSize="12sp"
+                                android:fontFamily="@font/lexend_deca" />
+
+                            <TextView
+                                android:id="@+id/txtData"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="-"
+                                android:textColor="@color/blue_dark"
+                                android:textSize="14sp"
+                                android:textStyle="bold"
+                                android:layout_marginTop="2dp"
+                                android:fontFamily="@font/lexend_deca_semibold" />
+
+                        </LinearLayout>
+
+                        <!-- Duração -->
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:gravity="center"
+                            android:background="@drawable/bg_info_item"
+                            android:padding="12dp"
+                            android:layout_marginStart="8dp">
+
+                            <ImageView
+                                android:layout_width="24dp"
+                                android:layout_height="24dp"
+                                android:src="@drawable/ic_tempo"
+                                android:tint="@color/orange_accent"
+                                android:layout_marginBottom="4dp" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Duração"
+                                android:textColor="@color/gray_dark"
+                                android:textSize="12sp"
+                                android:fontFamily="@font/lexend_deca" />
+
+                            <TextView
+                                android:id="@+id/txtDuracao"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="-"
+                                android:textColor="@color/orange_accent"
+                                android:textSize="14sp"
+                                android:textStyle="bold"
+                                android:layout_marginTop="2dp"
+                                android:fontFamily="@font/lexend_deca_semibold" />
+
+                        </LinearLayout>
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <!-- Hora Início -->
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:gravity="center"
+                            android:background="@drawable/bg_info_item"
+                            android:padding="12dp">
+
+                            <ImageView
+                                android:layout_width="24dp"
+                                android:layout_height="24dp"
+                                android:src="@drawable/ic_clock"
+                                android:tint="@color/blue_primary"
+                                android:layout_marginBottom="4dp" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Início"
+                                android:textColor="@color/gray_dark"
+                                android:textSize="12sp"
+                                android:fontFamily="@font/lexend_deca" />
+
+                            <TextView
+                                android:id="@+id/txtHoraInicio"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="-"
+                                android:textColor="@color/blue_dark"
+                                android:textSize="14sp"
+                                android:textStyle="bold"
+                                android:layout_marginTop="2dp"
+                                android:fontFamily="@font/lexend_deca_semibold" />
+
+                        </LinearLayout>
+
+                        <!-- Hora Fim -->
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:gravity="center"
+                            android:background="@drawable/bg_info_item"
+                            android:padding="12dp"
+                            android:layout_marginStart="8dp">
+
+                            <ImageView
+                                android:layout_width="24dp"
+                                android:layout_height="24dp"
+                                android:src="@drawable/ic_clock"
+                                android:tint="@color/blue_primary"
+                                android:layout_marginBottom="4dp" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Término"
+                                android:textColor="@color/gray_dark"
+                                android:textSize="12sp"
+                                android:fontFamily="@font/lexend_deca" />
+
+                            <TextView
+                                android:id="@+id/txtHoraFim"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="-"
+                                android:textColor="@color/blue_dark"
+                                android:textSize="14sp"
+                                android:textStyle="bold"
+                                android:layout_marginTop="2dp"
+                                android:fontFamily="@font/lexend_deca_semibold" />
+
+                        </LinearLayout>
+
+                    </LinearLayout>
+
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Card de Descrição -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="2dp"
+                app:cardBackgroundColor="@color/white_off">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="12dp">
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_descricao"
+                            android:tint="@color/blue_primary"
+                            android:layout_marginEnd="8dp" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Descrição da Parada"
+                            android:textColor="@color/blue_dark"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:fontFamily="@font/lexend_deca_semibold" />
+
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/txtDescricao"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="-"
+                        android:background="@drawable/bg_text_area"
+                        android:padding="16dp"
+                        android:minHeight="120dp"
+                        android:textColor="@color/blue_dark"
+                        android:textSize="14sp"
+                        android:lineSpacingExtra="4dp"
+                        android:fontFamily="@font/lexend_deca" />
+
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Botão Finalizar Parada (visível apenas para engenheiros) -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnFinalizarParada"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:layout_marginTop="16dp"
+                android:text="Finalizar Parada"
+                android:textColor="@color/white_off"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:visibility="gone"
+                app:icon="@drawable/ic_check"
+                app:iconTint="@color/white_off"
+                app:backgroundTint="@color/blue_primary"
+                app:cornerRadius="12dp" />
+
+        </LinearLayout>
+    </ScrollView>
 
 </LinearLayout>

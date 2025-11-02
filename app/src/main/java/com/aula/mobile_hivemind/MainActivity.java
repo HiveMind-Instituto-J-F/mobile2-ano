@@ -3,11 +3,14 @@ package com.aula.mobile_hivemind;
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
 import com.aula.mobile_hivemind.auth.LoginActivity;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import androidx.appcompat.app.ActionBar;
@@ -24,7 +27,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 
 public class MainActivity extends AppCompatActivity {
 
-    private FloatingActionButton fabMain;
+    private ExtendedFloatingActionButton fabMain;
     private ActivityMainBinding binding;
     private NavController navController;
     private String userType;
@@ -56,49 +59,125 @@ public class MainActivity extends AppCompatActivity {
 
         navController = Navigation.findNavController(this, R.id.nav_host_fragment_activity_main);
 
+        setupNavigationVisibilityController();
+
         setupNavigationByUserType();
         setupFabAction();
-
-        Toast.makeText(this, "Bem-vindo! Perfil: " + userType, Toast.LENGTH_SHORT).show();
     }
 
-    private void redirectToLogin() {
-        Intent intent = new Intent(this, LoginActivity.class);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        startActivity(intent);
-        finish();
+    private void setupNavigationVisibilityController() {
+        navController.addOnDestinationChangedListener((controller, destination, arguments) -> {
+            int[] hideBottomNavDestinations = {
+                    R.id.navigation_logout,
+                    R.id.notificationHistoryFragment,
+                    R.id.navigation_historico_diario,
+                    R.id.addParadaFragment,
+                    R.id.confirmationFragment
+            };
+
+            boolean shouldHide = false;
+            for (int destinationId : hideBottomNavDestinations) {
+                if (destination.getId() == destinationId) {
+                    shouldHide = true;
+                    break;
+                }
+            }
+
+            if (shouldHide) {
+                hideBottomNavigation();
+            } else {
+                showBottomNavigation();
+            }
+
+            controlFabVisibility(destination.getId());
+        });
+    }
+
+    private void controlFabVisibility(int destinationId) {
+        int[] showFabDestinations = {
+                R.id.navigation_home,
+                R.id.navigation_homerh
+        };
+
+        boolean shouldShowFab = false;
+        for (int fabDestinationId : showFabDestinations) {
+            if (destinationId == fabDestinationId) {
+                shouldShowFab = true;
+                break;
+            }
+        }
+
+        if (shouldShowFab && userHasFabPermission()) {
+            showFab();
+        } else {
+            hideFab();
+        }
+    }
+
+    public void hideBottomNavigation() {
+        BottomNavigationView navView = binding.navView;
+        if (navView != null) {
+            navView.setVisibility(View.GONE);
+        }
+        hideFab();
+    }
+
+    public void showBottomNavigation() {
+        BottomNavigationView navView = binding.navView;
+        if (navView != null) {
+            navView.setVisibility(View.VISIBLE);
+        }
+    }
+
+    private void showFab() {
+        if (fabMain != null && userHasFabPermission()) {
+            fabMain.setVisibility(View.VISIBLE);
+            fabMain.setAlpha(1f);
+            fabMain.setScaleX(1f);
+            fabMain.setScaleY(1f);
+        }
+    }
+
+    private void hideFab() {
+        if (fabMain != null) {
+            fabMain.setVisibility(View.GONE);
+        }
     }
 
     // -------------------- FAB --------------------
     public void setFabVisibility(boolean visible) {
         if (fabMain != null) {
-            // Verifica se o usuário tem permissão para ver o FAB
             if (!userHasFabPermission()) {
                 fabMain.setVisibility(View.GONE);
                 return;
             }
 
             if (visible) {
-                fabMain.setVisibility(View.VISIBLE);
-                fabMain.setImageResource(R.drawable.baseline_add_24);
-                fabMain.setAlpha(1f);
-                fabMain.setScaleX(1f);
-                fabMain.setScaleY(1f);
+                showFab();
             } else {
-                fabMain.setVisibility(View.GONE);
+                hideFab();
             }
         }
     }
+
 
     public void setBottomNavigationVisibility(boolean visible) {
         BottomNavigationView navView = binding.navView;
         if (navView != null) {
             navView.setVisibility(visible ? View.VISIBLE : View.GONE);
         }
+
+        if (visible) {
+            if (navController != null) {
+                int currentDestination = navController.getCurrentDestination().getId();
+                controlFabVisibility(currentDestination);
+            }
+        } else {
+            hideFab();
+        }
     }
 
     private void setupFabAction() {
-        // Primeiro verifica se o usuário tem permissão para usar o FAB
         if (!userHasFabPermission()) {
             fabMain.setVisibility(View.GONE);
             return;
@@ -153,64 +232,65 @@ public class MainActivity extends AppCompatActivity {
         AppBarConfiguration appBarConfiguration;
 
         if ("regular".equals(userType)) {
-            // OPERADOR
+            // OPERADOR - apenas home
             appBarConfiguration = new AppBarConfiguration.Builder(
-                    R.id.navigation_home,
-                    R.id.navigation_logout
+                    R.id.navigation_home
             ).build();
 
-            navView.setVisibility(View.VISIBLE);
-            navView.getMenu().findItem(R.id.navigation_home).setVisible(true);
-            navView.getMenu().findItem(R.id.navigation_dashboard).setVisible(false);
-            navView.getMenu().findItem(R.id.navigation_calendar).setVisible(false);
-            navView.getMenu().findItem(R.id.navigation_homerh).setVisible(false);
-            navView.getMenu().findItem(R.id.navigation_logout).setVisible(true);
+            configureMenuVisibility(navView, true, false, false);
 
         } else if ("MOP".equals(userType)) {
-            // ENGENHEIRO
+            // ENGENHEIRO - home, dashboard, calendar
             appBarConfiguration = new AppBarConfiguration.Builder(
                     R.id.navigation_home,
                     R.id.navigation_dashboard,
-                    R.id.navigation_logout
+                    R.id.navigation_calendar
             ).build();
 
-            navView.setVisibility(View.VISIBLE);
-            navView.getMenu().findItem(R.id.navigation_home).setVisible(true);
-            navView.getMenu().findItem(R.id.navigation_dashboard).setVisible(true);
-            navView.getMenu().findItem(R.id.navigation_calendar).setVisible(false);
-            navView.getMenu().findItem(R.id.navigation_homerh).setVisible(false);
-            navView.getMenu().findItem(R.id.navigation_logout).setVisible(true);
-
-        } else if ("RH".equals(userType)) {
-            // SUPERVISOR
-            appBarConfiguration = new AppBarConfiguration.Builder(
-                    R.id.navigation_homerh,
-                    R.id.navigation_calendar,
-                    R.id.navigation_logout
-            ).build();
-
-            navView.setVisibility(View.VISIBLE);
-            navView.getMenu().findItem(R.id.navigation_home).setVisible(false);
-            navView.getMenu().findItem(R.id.navigation_dashboard).setVisible(false);
-            navView.getMenu().findItem(R.id.navigation_calendar).setVisible(true);
-            navView.getMenu().findItem(R.id.navigation_homerh).setVisible(true);
-            navView.getMenu().findItem(R.id.navigation_logout).setVisible(true);
-
-            // Navegar para home RH por padrão
-            navController.navigate(R.id.navigation_homerh);
-
-            // Esconder FAB para Supervisores
-            fabMain.setVisibility(View.GONE);
+            configureMenuVisibility(navView, true, true, true);
 
         } else {
-            // PADRÃO (Operador)
+            // PADRÃO (fallback) - apenas home
             appBarConfiguration = new AppBarConfiguration.Builder(
-                    R.id.navigation_home,
-                    R.id.navigation_logout
+                    R.id.navigation_home
             ).build();
+
+            configureMenuVisibility(navView, true, false, false);
         }
 
         NavigationUI.setupWithNavController(navView, navController);
-        setupFabAction();
+
+        // Navega para a tela inicial baseada no tipo de usuário
+        if ("regular".equals(userType) || "MOP".equals(userType)) {
+            navController.navigate(R.id.navigation_home);
+        }
+    }
+
+    private void configureMenuVisibility(BottomNavigationView navView, boolean home, boolean dashboard, boolean calendar) {
+        Menu menu = navView.getMenu();
+
+        // Verificação segura para evitar NullPointerException
+        MenuItem homeItem = menu.findItem(R.id.navigation_home);
+        MenuItem dashboardItem = menu.findItem(R.id.navigation_dashboard);
+        MenuItem calendarItem = menu.findItem(R.id.navigation_calendar);
+
+        if (homeItem != null) {
+            homeItem.setVisible(home);
+        }
+
+        if (dashboardItem != null) {
+            dashboardItem.setVisible(dashboard);
+        }
+
+        if (calendarItem != null) {
+            calendarItem.setVisible(calendar);
+        }
+    }
+
+    private void redirectToLogin() {
+        Intent intent = new Intent(this, LoginActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+        finish();
     }
 }

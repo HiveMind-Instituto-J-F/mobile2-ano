@@ -12,16 +12,16 @@
         tools:layout="@layout/fragment_home" />
 
     <fragment
-        android:id="@+id/navigation_calendar"
+        android:id="@+id/navigation_dashboard"
         android:name="com.aula.mobile_hivemind.ui.dashboard.DashboardFragment"
-        android:label="navigation_calendar"
-        tools:layout="@layout/fragment_calendar" />
+        android:label="Dashboard"
+        tools:layout="@layout/fragment_dashboard" />
 
     <fragment
-        android:id="@+id/navigation_dashboard"
+        android:id="@+id/navigation_calendar"
         android:name="com.aula.mobile_hivemind.ui.calendar.CalendarFragment"
-        android:label="navigation_dashboard"
-        tools:layout="@layout/fragment_dashboard" />
+        android:label="navigation_calendar"
+        tools:layout="@layout/fragment_calendar" />
     <activity
         android:id="@+id/splashScreenActivity"
         android:name="com.aula.mobile_hivemind.SplashScreenActivity"
@@ -58,4 +58,10 @@
         android:name="com.aula.mobile_hivemind.auth.HistoricoDiarioFragment"
         android:label="Histórico Diário"
         tools:layout="@layout/fragment_historico_diario" />
+
+    <fragment
+        android:id="@+id/notificationHistoryFragment"
+        android:name="com.aula.mobile_hivemind.notification.NotificationHistoryFragment"
+        android:label="Histórico de Notificações"
+        tools:layout="@layout/fragment_notification_history" />
 </navigation>

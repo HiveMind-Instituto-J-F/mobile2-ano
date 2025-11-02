@@ -44,7 +44,6 @@ dependencies {
     implementation(libs.lifecycle.viewmodel.ktx)
     implementation(libs.navigation.fragment)
     implementation(libs.navigation.ui)
-    implementation(libs.firebase.ai)
     implementation (libs.play.services.auth)
     implementation(libs.material.calendarview)
     implementation(libs.activity)
@@ -54,16 +53,18 @@ dependencies {
     // Dependências do Gráfico
     implementation ("com.github.PhilJay:MPAndroidChart:v3.1.0")
     implementation(libs.firebase.firestore)
+    implementation(libs.androidx.navigation.fragment)
+    implementation(libs.androidx.navigation.ui)
 
     // Dependências do JUnit 5
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.11.0-M1") // Versão mais recente
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.11.0-M1") // Versão mais recente
-    testImplementation("org.junit.jupiter:junit-jupiter-params:5.11.0-M1") // Opcional, para testes parametrizados
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.11.0-M1")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.11.0-M1")
+    testImplementation("org.junit.jupiter:junit-jupiter-params:5.11.0-M1")
 
     // Para rodar testes JUnit 4 e 5 juntos
-    testRuntimeOnly("org.junit.vintage:junit-vintage-engine:5.11.0-M1") // Versão mais recente
+    testRuntimeOnly("org.junit.vintage:junit-vintage-engine:5.11.0-M1")
 
-    testImplementation(libs.junit) // Mantém a dependência do JUnit 4 para compatibilidade
+    testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
     implementation(platform("com.google.firebase:firebase-bom:34.2.0"))

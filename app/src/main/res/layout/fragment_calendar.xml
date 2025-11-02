@@ -4,60 +4,117 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#FFFFFF"
+    android:background="@color/white_off"
     tools:context=".ui.calendar.CalendarFragment">
 
-    <!-- Cabeçalho com ícones e título -->
-
-    <!-- CalendarView -->
-
-    <TextView
-        android:id="@+id/textView4"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="100dp"
-        android:layout_marginTop="15dp"
-        android:layout_marginEnd="90dp"
-        android:fontFamily="@font/lexend_deca_semibold"
-        android:text="Registro total de paradas"
-        android:textColor="#000000"
-        android:textSize="19sp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <com.prolificinteractive.materialcalendarview.MaterialCalendarView
-        android:id="@+id/calendarView"
+    <!-- Header -->
+    <LinearLayout
+        android:id="@+id/header"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:layout_marginBottom="1dp"
-        android:autoHandwritingEnabled="true"
-        app:layout_constraintBottom_toTopOf="@+id/recyclerViewCalendar"
+        android:background="@drawable/bg_gradient_header"
+        android:orientation="vertical"
+        android:paddingTop="40dp"
+        android:paddingBottom="24dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/textView4"
-        app:mcv_arrowColor="@android:color/transparent"
-        app:mcv_dateTextAppearance="@style/CalendarDate"
-        app:mcv_firstDayOfWeek="monday"
-        app:mcv_headerTextAppearance="@style/CalendarHeader"
-        app:mcv_selectionColor="@android:color/transparent"
-        app:mcv_showOtherDates="all"
-        app:mcv_weekDayTextAppearance="@style/CalendarWeek" />
+        app:layout_constraintTop_toTopOf="parent">
 
-    <!-- RecyclerView -->
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recyclerViewCalendar"
+        <TextView
+            android:id="@+id/textView4"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/lexend_deca_semibold"
+            android:gravity="center"
+            android:text="Calendário de Paradas"
+            android:textColor="@color/white_off"
+            android:textSize="24sp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/lexend_deca"
+            android:gravity="center"
+            android:text="Visualize as paradas por data"
+            android:textColor="@color/white_off"
+            android:textSize="14sp"
+            android:alpha="0.9"
+            android:layout_marginTop="4dp" />
+    </LinearLayout>
+
+    <!-- Calendar Card -->
+    <androidx.cardview.widget.CardView
+        android:id="@+id/calendarCard"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        app:cardBackgroundColor="@color/white_off"
+        app:cardCornerRadius="20dp"
+        app:cardElevation="4dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/header">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <com.prolificinteractive.materialcalendarview.MaterialCalendarView
+                android:id="@+id/calendarView"
+                android:layout_width="match_parent"
+                android:layout_height="320dp"
+                android:autoHandwritingEnabled="true"
+                app:mcv_arrowColor="@color/blue_primary"
+                app:mcv_dateTextAppearance="@style/CalendarDateStyled"
+                app:mcv_firstDayOfWeek="monday"
+                app:mcv_headerTextAppearance="@style/CalendarHeaderStyled"
+                app:mcv_selectionColor="@color/blue_primary"
+                app:mcv_showOtherDates="all"
+                app:mcv_weekDayTextAppearance="@style/CalendarWeekStyled" />
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
+
+    <!-- Lista de Paradas -->
+    <androidx.cardview.widget.CardView
+        android:id="@+id/listCard"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:clipToPadding="false"
-        android:paddingTop="12dp"
-        android:paddingBottom="12dp"
-        android:scrollbars="vertical"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="16dp"
+        app:cardBackgroundColor="@color/white_off"
+        app:cardCornerRadius="20dp"
+        app:cardElevation="4dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/calendarView"
-        tools:listitem="@layout/parada_item_recycleview_calendar" />
+        app:layout_constraintTop_toBottomOf="@id/calendarCard">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/lexend_deca_semibold"
+                android:text="Paradas do Dia Selecionado"
+                android:textColor="@color/blue_dark"
+                android:textSize="18sp"
+                android:layout_marginBottom="16dp" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recyclerViewCalendar"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
+
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

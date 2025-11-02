@@ -17,6 +17,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -25,11 +26,13 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.cardview.widget.CardView;
 import androidx.core.content.FileProvider;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 
+import com.aula.mobile_hivemind.MainActivity;
 import com.aula.mobile_hivemind.R;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.resource.bitmap.CircleCrop;
@@ -37,6 +40,7 @@ import com.cloudinary.android.MediaManager;
 import com.cloudinary.android.callback.ErrorInfo;
 import com.cloudinary.android.callback.UploadCallback;
 import com.google.android.material.imageview.ShapeableImageView;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.io.ByteArrayOutputStream;
@@ -57,7 +61,9 @@ public class LogoutFragment extends Fragment {
     private static final String UPLOAD_PRESET = "Main_preset";
 
     private TextView usuarioLogado;
+    private TextView txtSetorUsuario;
     private Button btnSair;
+    private ImageButton btnFechar;
     private ShapeableImageView imgPerfil;
 
     private ActivityResultLauncher<String[]> permissionLauncher;
@@ -68,6 +74,8 @@ public class LogoutFragment extends Fragment {
     private SharedPreferences sharedPreferences;
     private FirebaseFirestore db;
     private String userEmail;
+    private CardView itemInfoHistorico;
+    private String userType;
 
     public LogoutFragment() {}
 
@@ -87,7 +95,9 @@ public class LogoutFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_logout, container, false);
 
         usuarioLogado = view.findViewById(R.id.usuarioLogado);
+        txtSetorUsuario = view.findViewById(R.id.txtSetorUsuario);
         btnSair = view.findViewById(R.id.btnSair);
+        btnFechar = view.findViewById(R.id.btnFechar);
         imgPerfil = view.findViewById(R.id.imgFoto);
 
         userEmail = sharedPreferences.getString(KEY_USER_EMAIL, null);
@@ -99,16 +109,106 @@ public class LogoutFragment extends Fragment {
 
         loadUserProfileImage();
 
+        carregarSetorUsuario();
+
+        // Obter o tipo de usuário
+        userType = sharedPreferences.getString("user_type", "regular");
+
+        // Encontrar o item do histórico
+        itemInfoHistorico = view.findViewById(R.id.itemInfoHistorico);
+
+        // Configurar visibilidade do histórico baseado no tipo de usuário
+        configurarVisibilidadeHistorico();
+
+        // Configurar clique apenas se não for engenheiro
+        if (!isEngenheiro() && itemInfoHistorico != null) {
+            itemInfoHistorico.setOnClickListener(v -> {
+                NavController navController = Navigation.findNavController(v);
+                navController.navigate(R.id.navigation_historico_diario);
+            });
+        }
+
         btnSair.setOnClickListener(v -> mostrarDialogoConfirmacaoLogout());
+        btnFechar.setOnClickListener(v -> fecharTela());
         imgPerfil.setOnClickListener(v -> showImagePickerDialog());
 
-        LinearLayout itemInfoHistorico = view.findViewById(R.id.itemInfoHistorico);
         itemInfoHistorico.setOnClickListener(v -> {
             NavController navController = Navigation.findNavController(v);
             navController.navigate(R.id.navigation_historico_diario);
         });
 
         return view;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (getActivity() instanceof MainActivity) {
+            ((MainActivity) getActivity()).setFabVisibility(false);
+        }
+    }
+
+    private void carregarSetorUsuario() {
+        String userSetor = sharedPreferences.getString("user_setor", null);
+        if (userSetor != null && !userSetor.isEmpty()) {
+            txtSetorUsuario.setText(userSetor);
+        } else {
+            buscarSetorDoFirestore();
+        }
+    }
+
+    private void buscarSetorDoFirestore() {
+        if (userEmail == null) {
+            txtSetorUsuario.setText("Não informado");
+            return;
+        }
+
+        db.collection("trabalhadores")
+                .whereEqualTo("login", userEmail)
+                .limit(1)
+                .get()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful() && !task.getResult().isEmpty()) {
+                        DocumentSnapshot document = task.getResult().getDocuments().get(0);
+                        String setor = document.getString("setor");
+                        if (setor != null && !setor.isEmpty()) {
+                            txtSetorUsuario.setText(setor);
+                            // Salvar no SharedPreferences para uso futuro
+                            SharedPreferences.Editor editor = sharedPreferences.edit();
+                            editor.putString("user_setor", setor);
+                            editor.apply();
+                        } else {
+                            txtSetorUsuario.setText("Não informado");
+                        }
+                    } else {
+                        txtSetorUsuario.setText("Não informado");
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    txtSetorUsuario.setText("Não informado");
+                });
+    }
+
+    private boolean isEngenheiro() {
+        return "MOP".equals(userType);
+    }
+
+    private void configurarVisibilidadeHistorico() {
+        if (itemInfoHistorico != null) {
+            if (isEngenheiro()) {
+                // Engenheiro: esconder completamente o item do histórico
+                itemInfoHistorico.setVisibility(View.GONE);
+            } else {
+                // Operador: mostrar o item do histórico
+                itemInfoHistorico.setVisibility(View.VISIBLE);
+            }
+        }
+    }
+
+    private void fecharTela() {
+        if (getActivity() != null) {
+            getActivity().onBackPressed();
+        }
     }
 
     private String getProfileImageKey() {
@@ -245,10 +345,7 @@ public class LogoutFragment extends Fragment {
                 .unsigned(UPLOAD_PRESET)
                 .callback(new UploadCallback() {
                     @Override
-                    public void onStart(String requestId) {
-                        requireActivity().runOnUiThread(() ->
-                                Toast.makeText(requireContext(), "Enviando imagem...", Toast.LENGTH_SHORT).show());
-                    }
+                    public void onStart(String requestId) {}
 
                     @Override
                     public void onProgress(String requestId, long bytes, long totalBytes) {}
@@ -262,7 +359,7 @@ public class LogoutFragment extends Fragment {
                                 .transform(new CircleCrop())
                                 .placeholder(R.drawable.img)
                                 .into(imgPerfil);
-                        Toast.makeText(requireContext(), "Imagem salva na nuvem!", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(requireContext(), "Imagem salva com sucesso!", Toast.LENGTH_SHORT).show();
                     }
 
                     @Override

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/menu_profile"
+        android:title="Perfil" />
+
+    <item
+        android:id="@+id/menu_notification_history"
+        android:title="Histórico de Notificações" />
+</menu>

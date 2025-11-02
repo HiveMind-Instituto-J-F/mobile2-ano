@@ -1,6 +1,7 @@
 package com.aula.mobile_hivemind.api;
 
 import android.util.Base64;
+import android.util.Log;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -8,6 +9,9 @@ import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParseException;
+import com.google.gson.JsonPrimitive;
+import com.google.gson.JsonSerializationContext;
+import com.google.gson.JsonSerializer;
 
 import java.lang.reflect.Type;
 import java.text.ParseException;
@@ -47,6 +51,7 @@ public class RetrofitClient {
 
             Gson gson = new GsonBuilder()
                     .setDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+                    .registerTypeAdapter(Date.class, new DateSerializer())
                     .registerTypeAdapter(Date.class, new DateDeserializer())
                     .create();
 
@@ -87,6 +92,20 @@ public class RetrofitClient {
             sqlApiService = retrofit.create(SqlApiService.class);
         }
         return sqlApiService;
+    }
+
+    private static class DateSerializer implements JsonSerializer<Date> {
+        @Override
+        public JsonElement serialize(Date date, Type typeOfSrc, JsonSerializationContext context) {
+            try {
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault());
+                sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+                return new JsonPrimitive(sdf.format(date));
+            } catch (Exception e) {
+                Log.e("DateSerializer", "Erro ao serializar data: " + date, e);
+                return new JsonPrimitive("");
+            }
+        }
     }
 
     private static class DateDeserializer implements JsonDeserializer<Date> {

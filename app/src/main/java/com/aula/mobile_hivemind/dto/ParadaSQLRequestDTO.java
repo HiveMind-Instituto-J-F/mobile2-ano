@@ -5,6 +5,7 @@ import com.google.gson.annotations.SerializedName;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
+import java.util.TimeZone;
 
 public class ParadaSQLRequestDTO {
     @SerializedName("id_maquina")
@@ -48,6 +49,7 @@ public class ParadaSQLRequestDTO {
     private String formatarHora(Date dateTime) {
         if (dateTime == null) return null;
         SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss", Locale.getDefault());
+        timeFormat.setTimeZone(TimeZone.getDefault());
         return timeFormat.format(dateTime);
     }
 

@@ -3,24 +3,24 @@ package com.aula.mobile_hivemind.ui.calendar;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
-import android.graphics.drawable.GradientDrawable;
-import android.graphics.drawable.LayerDrawable;
 import android.os.Bundle;
 import android.text.style.ForegroundColorSpan;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
+import android.widget.PopupMenu;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
+import com.aula.mobile_hivemind.R;
 import com.aula.mobile_hivemind.api.RetrofitClient;
 import com.aula.mobile_hivemind.api.SqlApiService;
 import com.aula.mobile_hivemind.databinding.FragmentCalendarBinding;
-import com.aula.mobile_hivemind.dto.ParadaSQLRequestDTO;
 import com.aula.mobile_hivemind.dto.ParadaSQLResponseDTO;
 import com.aula.mobile_hivemind.dto.RegistroParadaResponseDTO;
 import com.aula.mobile_hivemind.recyclerViewParadas.Parada;
@@ -74,26 +74,10 @@ public class CalendarFragment extends Fragment {
         mongoApiService = RetrofitClient.getApiService();
         dateFormat = new SimpleDateFormat("dd, MMM yyyy", Locale.getDefault());
 
-        // Obter informações do usuário
-        obterInformacoesUsuario();
-
         MaterialCalendarView calendarView = binding.calendarView;
 
-        // Título do mês em português
-        calendarView.setTitleFormatter(day -> {
-            SimpleDateFormat format = new SimpleDateFormat("MMMM yyyy", new Locale("pt", "BR"));
-            return "     " + format.format(day.getDate());
-        });
-
-        // Remove setas
-        calendarView.setLeftArrowMask(null);
-        calendarView.setRightArrowMask(null);
-
-        // Decora os dias do mês atual
-        calendarView.addDecorator(new CurrentMonthDecorator());
-
-        // Decoradores visuais para outros meses
-        decorateOtherMonthDays(calendarView);
+        // Configurar calendário
+        setupCalendar(calendarView);
 
         // Inicializar lista
         todasParadas = new ArrayList<>();
@@ -119,11 +103,46 @@ public class CalendarFragment extends Fragment {
         return root;
     }
 
-    private void obterInformacoesUsuario() {
-        // Implemente conforme sua lógica de autenticação
-        // Exemplo temporário:
-        userType = "MOP"; // Engenheiro
-        userSetor = "Montagem";
+    private void setupCalendar(MaterialCalendarView calendarView) {
+        // Título do mês em português
+        calendarView.setTitleFormatter(day -> {
+            SimpleDateFormat format = new SimpleDateFormat("MMMM yyyy", new Locale("pt", "BR"));
+            return format.format(day.getDate());
+        });
+
+        // Remove setas
+        calendarView.setLeftArrowMask(null);
+        calendarView.setRightArrowMask(null);
+
+        // Decorador para dias de outros meses
+        calendarView.addDecorator(new DayViewDecorator() {
+            @Override
+            public boolean shouldDecorate(CalendarDay day) {
+                Calendar current = Calendar.getInstance();
+                return day.getMonth() != current.get(Calendar.MONTH) ||
+                        day.getYear() != current.get(Calendar.YEAR);
+            }
+
+            @Override
+            public void decorate(DayViewFacade view) {
+                view.addSpan(new ForegroundColorSpan(Color.LTGRAY));
+            }
+        });
+
+        // Decorador para mês atual
+        calendarView.addDecorator(new DayViewDecorator() {
+            @Override
+            public boolean shouldDecorate(CalendarDay day) {
+                Calendar current = Calendar.getInstance();
+                return day.getMonth() == current.get(Calendar.MONTH) &&
+                        day.getYear() == current.get(Calendar.YEAR);
+            }
+
+            @Override
+            public void decorate(DayViewFacade view) {
+                view.addSpan(new ForegroundColorSpan(Color.BLACK));
+            }
+        });
     }
 
     private void carregarTodasParadas(MaterialCalendarView calendarView) {
@@ -166,8 +185,8 @@ public class CalendarFragment extends Fragment {
                     }
 
                     // Marcar datas no calendário com cor LARANJA
-                    marcarParadasNoCalendario(calendarView, paradasEmAndamento, COR_EM_ANDAMENTO, "EM_ANDAMENTO");
-                    atualizarUI(calendarView);
+                    marcarParadasNoCalendario(calendarView, paradasEmAndamento, COR_EM_ANDAMENTO);
+                    atualizarUI();
 
                 } else {
                     Log.e("CalendarFragment", "Erro ao buscar paradas MongoDB: " + response.code());
@@ -206,12 +225,11 @@ public class CalendarFragment extends Fragment {
                         }
                     }
 
-                    marcarParadasNoCalendario(calendarView, paradasFinalizadas, COR_FINALIZADA, "FINALIZADA");
-                    atualizarUI(calendarView);
+                    marcarParadasNoCalendario(calendarView, paradasFinalizadas, COR_FINALIZADA);
+                    atualizarUI();
 
                 } else {
                     Log.e("CalendarFragment", "Erro ao buscar paradas SQL: " + response.code());
-                    // Log do erro detalhado
                     if (response.errorBody() != null) {
                         try {
                             String errorBody = response.errorBody().string();
@@ -266,12 +284,10 @@ public class CalendarFragment extends Fragment {
         }
 
         try {
-            // Tente diferentes formatos baseado no seu SQL
             SimpleDateFormat[] formatos = {
                     new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()),
                     new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()),
-                    new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()),
-                    new SimpleDateFormat("HH:mm:ss", Locale.getDefault())
+                    new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
             };
 
             for (SimpleDateFormat formato : formatos) {
@@ -304,7 +320,7 @@ public class CalendarFragment extends Fragment {
         return true;
     }
 
-    private void atualizarUI(MaterialCalendarView calendarView) {
+    private void atualizarUI() {
         Log.d("CalendarFragment", "Total de paradas carregadas: " + todasParadas.size());
 
         // Atualizar adapter
@@ -316,49 +332,33 @@ public class CalendarFragment extends Fragment {
         }
     }
 
-    private void marcarParadasNoCalendario(MaterialCalendarView calendarView, List<Parada> paradas, int cor, String tipo) {
+    private void marcarParadasNoCalendario(MaterialCalendarView calendarView, List<Parada> paradas, int cor) {
         Map<CalendarDay, Integer> mapaCores = new HashMap<>();
 
         for (Parada parada : paradas) {
             if (parada.getDt_parada() != null) {
-                try {
-                    Date date = parada.getDt_parada();
-                    Calendar calendar = Calendar.getInstance();
-                    calendar.setTime(date);
-                    CalendarDay dia = CalendarDay.from(calendar);
+                Calendar calendar = Calendar.getInstance();
+                calendar.setTime(parada.getDt_parada());
+                CalendarDay dia = CalendarDay.from(calendar);
 
-                    // Verificar se já existe uma cor para este dia
-                    Integer corExistente = mapaCores.get(dia);
-
-                    if (corExistente == null) {
-                        // Primeira parada neste dia - usar a cor do tipo atual
-                        mapaCores.put(dia, cor);
-                        Log.d("CalendarFragment", "Marcando dia " + dia + " com cor " + tipo);
-                    } else if (corExistente != cor) {
-                        // Dia com ambos os tipos - usar cor mista
-                        mapaCores.put(dia, COR_MISTA);
-                        Log.d("CalendarFragment", "Dia " + dia + " tem ambos os tipos - usando cor mista");
-                    }
-
-                } catch (Exception e) {
-                    Log.e("CalendarFragment", "Erro ao processar data da parada", e);
+                Integer corExistente = mapaCores.get(dia);
+                if (corExistente == null) {
+                    mapaCores.put(dia, cor);
+                } else if (corExistente != cor) {
+                    mapaCores.put(dia, COR_MISTA);
                 }
             }
         }
 
-        // Aplicar decoradores para cada dia
+        // Aplicar decoradores
         for (Map.Entry<CalendarDay, Integer> entry : mapaCores.entrySet()) {
-            List<CalendarDay> datas = new ArrayList<>();
-            datas.add(entry.getKey());
-
-            String tipoDesc = "";
-            if (entry.getValue() == COR_EM_ANDAMENTO) tipoDesc = "EM ANDAMENTO";
-            else if (entry.getValue() == COR_FINALIZADA) tipoDesc = "FINALIZADA";
-            else tipoDesc = "AMBOS";
-
-            calendarView.addDecorator(new EventoDecorador(datas,
-                    new ColorDrawable(entry.getValue()), tipoDesc));
+            calendarView.addDecorator(new EventoDecorador(
+                    entry.getKey(),
+                    new ColorDrawable(entry.getValue())
+            ));
         }
+
+        calendarView.invalidateDecorators();
     }
 
     private void filtrarParadasPorData(CalendarDay dataSelecionada) {
@@ -414,60 +414,24 @@ public class CalendarFragment extends Fragment {
         Toast.makeText(getContext(), mensagem, Toast.LENGTH_SHORT).show();
     }
 
-    private void decorateOtherMonthDays(MaterialCalendarView calendarView) {
-        calendarView.addDecorator(new DayViewDecorator() {
-            @Override
-            public boolean shouldDecorate(CalendarDay day) {
-                Calendar currentCalendar = Calendar.getInstance();
-                Calendar dayCalendar = day.getCalendar();
-                return dayCalendar.get(Calendar.MONTH) != currentCalendar.get(Calendar.MONTH) ||
-                        dayCalendar.get(Calendar.YEAR) != currentCalendar.get(Calendar.YEAR);
-            }
-
-            @Override
-            public void decorate(DayViewFacade view) {
-                view.addSpan(new ForegroundColorSpan(Color.GRAY));
-            }
-        });
-    }
-
-    // Decorador para o mês atual
-    private class CurrentMonthDecorator implements DayViewDecorator {
-        @Override
-        public boolean shouldDecorate(CalendarDay day) {
-            Calendar currentCalendar = Calendar.getInstance();
-            Calendar dayCalendar = day.getCalendar();
-            return dayCalendar.get(Calendar.MONTH) == currentCalendar.get(Calendar.MONTH) &&
-                    dayCalendar.get(Calendar.YEAR) == currentCalendar.get(Calendar.YEAR);
-        }
-
-        @Override
-        public void decorate(DayViewFacade view) {
-            view.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-            view.addSpan(new ForegroundColorSpan(Color.BLACK));
-        }
-    }
-
     // Decorador para eventos com tipo
-    private class EventoDecorador implements DayViewDecorator {
-        private final List<CalendarDay> dates;
-        private final Drawable drawable;
-        private final String tipo;
+    private static class EventoDecorador implements DayViewDecorator {
+        private final CalendarDay date;
+        private final Drawable backgroundDrawable;
 
-        public EventoDecorador(List<CalendarDay> dates, Drawable drawable, String tipo) {
-            this.dates = dates;
-            this.drawable = drawable;
-            this.tipo = tipo;
+        public EventoDecorador(CalendarDay date, Drawable backgroundDrawable) {
+            this.date = date;
+            this.backgroundDrawable = backgroundDrawable;
         }
 
         @Override
         public boolean shouldDecorate(CalendarDay day) {
-            return dates.contains(day);
+            return date.equals(day);
         }
 
         @Override
         public void decorate(DayViewFacade view) {
-            view.setBackgroundDrawable(drawable);
+            view.setBackgroundDrawable(backgroundDrawable);
             view.addSpan(new ForegroundColorSpan(Color.WHITE));
         }
     }

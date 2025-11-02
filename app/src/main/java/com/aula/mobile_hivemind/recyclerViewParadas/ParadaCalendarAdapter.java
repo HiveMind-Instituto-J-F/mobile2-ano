@@ -8,6 +8,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.aula.mobile_hivemind.R;
@@ -24,17 +25,17 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class ParadaCalendarAdapter extends RecyclerView.Adapter<ParadaCalendarAdapter.MaquinaViewHolder> {
+public class ParadaCalendarAdapter extends RecyclerView.Adapter<ParadaCalendarAdapter.ParadaViewHolder> {
 
-    private List<Parada> listaMaquinas;
+    private List<Parada> listaParadas;
     private Context context;
     private SqlApiService sqlApiService;
     private Map<Long, String> cacheNomesMaquinas = new HashMap<>();
     private boolean cacheCarregado = false;
 
-    public ParadaCalendarAdapter(Context context, List<Parada> listaMaquinas, SqlApiService sqlApiService) {
+    public ParadaCalendarAdapter(Context context, List<Parada> listaParadas, SqlApiService sqlApiService) {
         this.context = context;
-        this.listaMaquinas = listaMaquinas;
+        this.listaParadas = listaParadas;
         this.sqlApiService = sqlApiService;
         carregarCacheMaquinas();
     }
@@ -51,7 +52,7 @@ public class ParadaCalendarAdapter extends RecyclerView.Adapter<ParadaCalendarAd
                         cacheNomesMaquinas.put(maquina.getId(), maquina.getNome());
                     }
                     cacheCarregado = true;
-                    notifyDataSetChanged(); // Atualiza a lista quando o cache estiver pronto
+                    notifyDataSetChanged();
                 }
             }
 
@@ -63,82 +64,94 @@ public class ParadaCalendarAdapter extends RecyclerView.Adapter<ParadaCalendarAd
     }
 
     public void updateData(List<Parada> newData) {
-        this.listaMaquinas = newData;
+        this.listaParadas = newData;
         notifyDataSetChanged();
     }
 
-    public static class MaquinaViewHolder extends RecyclerView.ViewHolder {
-        TextView tvTitulo, tvHora;
+    public static class ParadaViewHolder extends RecyclerView.ViewHolder {
+        TextView tvDescricao, tvSetor, tvData, tvStatus;
+        View indicator;
 
-        public MaquinaViewHolder(@NonNull View itemView) {
+        public ParadaViewHolder(@NonNull View itemView) {
             super(itemView);
-            tvTitulo = itemView.findViewById(R.id.tvTitle);
-            tvHora = itemView.findViewById(R.id.tvHorario);
+            tvDescricao = itemView.findViewById(R.id.textDescricao);
+            tvSetor = itemView.findViewById(R.id.textSetor);
+            tvData = itemView.findViewById(R.id.textData);
+            tvStatus = itemView.findViewById(R.id.textStatus);
+            indicator = itemView.findViewById(R.id.indicator);
         }
 
-        public void bind(Parada maquina, Map<Long, String> cacheNomesMaquinas, boolean cacheCarregado) {
-            // Buscar nome da máquina do cache
-            if (cacheCarregado && maquina.getId_maquina() != null) {
-                String nomeMaquina = cacheNomesMaquinas.get(maquina.getId_maquina().longValue());
-                tvTitulo.setText(nomeMaquina != null ? nomeMaquina : "Máquina não encontrada");
+        public void bind(Parada parada, Context context) {
+            // Descrição da parada
+            tvDescricao.setText(parada.getDes_parada() != null ? parada.getDes_parada() : "Sem descrição");
+
+            // Setor
+            tvSetor.setText(parada.getDes_setor() != null ? parada.getDes_setor() : "Setor não informado");
+
+            // Data formatada
+            if (parada.getDt_parada() != null) {
+                SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
+                tvData.setText(dateFormat.format(parada.getDt_parada()));
             } else {
-                tvTitulo.setText(maquina.getId_maquina() != null ? "Carregando..." : "ID não informado");
+                tvData.setText("Data não informada");
             }
 
-            // Formatar data e hora
-            if (maquina.getDt_parada() != null) {
-                SimpleDateFormat dateTimeFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault());
-                String dataHoraFormatada = dateTimeFormat.format(maquina.getDt_parada());
-                tvHora.setText(dataHoraFormatada);
+            // Status (Em andamento ou Finalizada)
+            if ("EM_ANDAMENTO".equals(parada.getTipo())) {
+                tvStatus.setText("Em Andamento");
+                tvStatus.setBackgroundColor(ContextCompat.getColor(context, android.R.color.holo_orange_light));
+                indicator.setBackgroundColor(ContextCompat.getColor(context, android.R.color.holo_orange_light));
             } else {
-                tvHora.setText("Data não informada");
+                tvStatus.setText("Finalizada");
+                tvStatus.setBackgroundColor(ContextCompat.getColor(context, android.R.color.holo_green_light));
+                indicator.setBackgroundColor(ContextCompat.getColor(context, android.R.color.holo_green_light));
             }
         }
     }
 
     @NonNull
     @Override
-    public MaquinaViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+    public ParadaViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View itemView = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.parada_item_recycleview_calendar, parent, false);
-        return new MaquinaViewHolder(itemView);
+        return new ParadaViewHolder(itemView);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull MaquinaViewHolder holder, int position) {
-        Parada maquina = listaMaquinas.get(position);
-        holder.bind(maquina, cacheNomesMaquinas, cacheCarregado);
+    public void onBindViewHolder(@NonNull ParadaViewHolder holder, int position) {
+        Parada parada = listaParadas.get(position);
+        holder.bind(parada, context);
 
         holder.itemView.setOnClickListener(v -> {
-            // Buscar nome da máquina para o modal (pode ser diferente do cache se ainda não carregou)
+            // Buscar nome da máquina para o modal
             String nomeMaquinaModal = "Carregando...";
-            if (cacheCarregado && maquina.getId_maquina() != null) {
-                nomeMaquinaModal = cacheNomesMaquinas.getOrDefault(maquina.getId_maquina().longValue(), "Máquina não encontrada");
+            if (cacheCarregado && parada.getId_maquina() != null) {
+                nomeMaquinaModal = cacheNomesMaquinas.getOrDefault(parada.getId_maquina().longValue(), "Máquina não encontrada");
             }
 
             // Formatar data para exibição
             String dataFormatada = "Não informada";
-            if (maquina.getDt_parada() != null) {
+            if (parada.getDt_parada() != null) {
                 SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
-                dataFormatada = dateFormat.format(maquina.getDt_parada());
+                dataFormatada = dateFormat.format(parada.getDt_parada());
             }
 
             // Formatar horas
             String horaInicio = "Não informada";
             String horaFim = "Não informada";
-            if (maquina.getHora_Inicio() != null) {
+            if (parada.getHora_Inicio() != null) {
                 SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm", Locale.getDefault());
-                horaInicio = timeFormat.format(maquina.getHora_Inicio());
+                horaInicio = timeFormat.format(parada.getHora_Inicio());
             }
-            if (maquina.getHora_Fim() != null) {
+            if (parada.getHora_Fim() != null) {
                 SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm", Locale.getDefault());
-                horaFim = timeFormat.format(maquina.getHora_Fim());
+                horaFim = timeFormat.format(parada.getHora_Fim());
             }
 
             // Calcular duração
             String duracao = "Não calculável";
-            if (maquina.getHora_Inicio() != null && maquina.getHora_Fim() != null) {
-                long diff = maquina.getHora_Fim().getTime() - maquina.getHora_Inicio().getTime();
+            if (parada.getHora_Inicio() != null && parada.getHora_Fim() != null) {
+                long diff = parada.getHora_Fim().getTime() - parada.getHora_Inicio().getTime();
                 long diffMinutes = diff / (60 * 1000);
                 long diffHours = diffMinutes / 60;
                 long remainingMinutes = diffMinutes % 60;
@@ -150,11 +163,14 @@ public class ParadaCalendarAdapter extends RecyclerView.Adapter<ParadaCalendarAd
                 }
             }
 
-            String detalhes = "ID da máquina: " + (maquina.getId_maquina() != null ? maquina.getId_maquina() : "-") +
+            String status = "EM_ANDAMENTO".equals(parada.getTipo()) ? "Em Andamento" : "Finalizada";
+
+            String detalhes = "Status: " + status +
+                    "\nID da máquina: " + (parada.getId_maquina() != null ? parada.getId_maquina() : "-") +
                     "\nNome da máquina: " + nomeMaquinaModal +
-                    "\nCódigo Colaborador: " + (maquina.getId_usuario() != null ? maquina.getId_usuario() : "-") +
-                    "\nSetor: " + (maquina.getDes_setor() != null ? maquina.getDes_setor() : "-") +
-                    "\nDescrição: " + (maquina.getDes_parada() != null ? maquina.getDes_parada() : "-") +
+                    "\nCódigo Colaborador: " + (parada.getId_usuario() != null ? parada.getId_usuario() : "-") +
+                    "\nSetor: " + (parada.getDes_setor() != null ? parada.getDes_setor() : "-") +
+                    "\nDescrição: " + (parada.getDes_parada() != null ? parada.getDes_parada() : "-") +
                     "\nData: " + dataFormatada +
                     "\nHora Início: " + horaInicio +
                     "\nHora Término: " + horaFim +
@@ -170,6 +186,6 @@ public class ParadaCalendarAdapter extends RecyclerView.Adapter<ParadaCalendarAd
 
     @Override
     public int getItemCount() {
-        return listaMaquinas.size();
+        return listaParadas.size();
     }
 }

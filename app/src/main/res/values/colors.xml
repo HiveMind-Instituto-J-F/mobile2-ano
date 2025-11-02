@@ -167,4 +167,16 @@
     <color name="amber_500">#FFC107</color>
     <color name="blue_gray_500">#607D8B</color>
 
+    <!--  Paleta de cores do HiveMind  -->
+    <color name="gray_dark">#484844</color>
+    <color name="blue_primary">#274855</color>
+    <color name="blue_dark">#202C33</color>
+    <color name="orange_accent">#E89640</color>
+    <color name="white_off">#DAE4E3</color>
+
+    <!-- Cores para estados -->
+    <color name="blue_primary_light">#3A5D6D</color>
+    <color name="blue_primary_dark">#1C3944</color>
+    <color name="orange_light">#F0A85A</color>
+
 </resources>
