@@ -3,6 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:tools="http://schemas.android.com/tools"
     android:orientation="vertical"
     android:background="@color/blue_dark">
 
@@ -23,7 +24,7 @@
             android:layout_height="48dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@drawable/arrow_back"
-            android:tint="@color/white_off" />
+            app:tint="@color/white_off" />
 
         <TextView
             android:id="@+id/txtTitulo"
@@ -70,17 +71,18 @@
                     android:layout_width="24dp"
                     android:layout_height="24dp"
                     android:src="@drawable/ic_history"
-                    android:tint="@color/blue_primary" />
+                    app:tint="@color/blue_primary" />
 
                 <TextView
+                    android:id="@+id/txtParada"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
                     android:layout_weight="1"
                     android:fontFamily="@font/lexend_deca_semibold"
                     android:text="Paradas de Hoje"
                     android:textColor="@color/blue_dark"
-                    android:textSize="18sp"
-                    android:layout_marginStart="12dp" />
+                    android:textSize="18sp" />
 
                 <TextView
                     android:id="@+id/txtDataAtual"
@@ -143,7 +145,8 @@
                 android:id="@+id/recyclerViewHistorico"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
-                android:layout_weight="1" />
+                android:layout_weight="1"
+                tools:listitem="@layout/parada_item_recycleview_principal"/>
 
             <!-- Estado Vazio -->
             <LinearLayout
@@ -159,7 +162,7 @@
                     android:layout_width="120dp"
                     android:layout_height="120dp"
                     android:src="@drawable/ic_empty_history"
-                    android:tint="@color/gray_dark"
+                    app:tint="@color/gray_dark"
                     android:alpha="0.5"
                     android:layout_marginBottom="24dp" />
 

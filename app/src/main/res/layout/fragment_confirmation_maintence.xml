@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/blue_dark"
+    tools:context=".ui.home.paradas.ConfirmationMaintenceFragment">
+
+    <!-- Background -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/bg_gradient_login" />
+
+    <!-- Card de Confirmação -->
+    <androidx.cardview.widget.CardView
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_margin="32dp"
+        app:cardBackgroundColor="@color/white_off"
+        app:cardCornerRadius="24dp"
+        app:cardElevation="12dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="40dp"
+            android:gravity="center">
+
+            <!-- Ícone de Sucesso -->
+            <ImageView
+                android:id="@+id/imageView"
+                android:layout_width="120dp"
+                android:layout_height="120dp"
+                android:src="@drawable/ic_success"
+                android:tint="@color/blue_primary" />
+
+            <!-- Mensagem Principal -->
+            <TextView
+                android:id="@+id/txtPrincipal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:fontFamily="@font/lexend_deca_medium"
+                android:gravity="center"
+                android:text="Manutenção Adicionada!"
+                android:textColor="@color/blue_dark"
+                android:textSize="28sp"
+                android:textStyle="bold" />
+
+            <!-- Descrição -->
+            <TextView
+                android:id="@+id/txtDescricao"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:fontFamily="@font/lexend_deca"
+                android:gravity="center"
+                android:lineSpacingExtra="4dp"
+                android:text="A sua manutenção foi registada com sucesso! O operador já irá ser notifcado que a máquina está pronta para uso."
+                android:textColor="@color/gray_dark"
+                android:textSize="16sp" />
+
+            <!-- Botão -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnVoltar"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:backgroundTint="@color/blue_primary"
+                android:text="Voltar para Tela Inicial"
+                android:textColor="@color/white_off"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                app:cornerRadius="12dp"
+                app:icon="@drawable/ic_home"
+                app:iconTint="@color/white_off"
+                android:layout_marginTop="32dp" />
+
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center"
+    android:padding="8dp">
+
+    <!-- Item MongoDB (Vermelho) -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:padding="4dp">
+
+        <TextView
+            android:id="@+id/legenda_mongo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Em Andamento"
+            android:textSize="12sp"
+            android:textColor="#333333"
+            android:textStyle="normal" />
+
+    </LinearLayout>
+
+    <!-- Item SQL (Verde) -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:padding="4dp">
+
+        <TextView
+            android:id="@+id/legenda_sql"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Finalizadas"
+            android:textSize="12sp"
+            android:textColor="#333333"
+            android:textStyle="normal" />
+
+    </LinearLayout>
+
+    <!-- Item Misto (Roxo) -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:padding="4dp">
+
+        <TextView
+            android:id="@+id/legenda_mista"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Mista"
+            android:textSize="12sp"
+            android:textColor="#333333"
+            android:textStyle="normal" />
+
+    </LinearLayout>
+
+</LinearLayout>

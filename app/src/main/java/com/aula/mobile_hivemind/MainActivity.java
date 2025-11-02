@@ -1,14 +1,15 @@
 package com.aula.mobile_hivemind;
 
-import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.Toast;
 
 import com.aula.mobile_hivemind.auth.LoginActivity;
+import com.aula.mobile_hivemind.utils.CustomToast;
+import com.aula.mobile_hivemind.utils.SharedPreferencesManager;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -21,27 +22,33 @@ import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
 import com.aula.mobile_hivemind.databinding.ActivityMainBinding;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.firestore.FirebaseFirestore;
 
 public class MainActivity extends AppCompatActivity {
 
     private ExtendedFloatingActionButton fabMain;
     private ActivityMainBinding binding;
     private NavController navController;
-    private String userType;
+    private int userType;
     private boolean isFabOpen = false;
+
+    // Constantes para tipos de usuário
+    private static final int TIPO_USUARIO_COMUM = 1;
+    private static final int TIPO_USUARIO_MANUTENCAO = 2;
+    private static final int TIPO_USUARIO_ADMIN = 3;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        userType = getIntent().getStringExtra("USER_TYPE");
-        if (userType == null) {
-            redirectToLogin();
-            return;
+        // Obter tipo de usuário do SharedPreferencesManager (como int)
+        userType = SharedPreferencesManager.getInstance(this).getUserType();
+
+        // Se não encontrar no SharedPreferences, tentar do Intent
+        if (userType == -1) {
+            userType = getIntent().getIntExtra("USER_TYPE", TIPO_USUARIO_COMUM);
         }
+
+        Log.d("MainActivity", "Tipo de usuário: " + userType);
 
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
@@ -49,10 +56,6 @@ public class MainActivity extends AppCompatActivity {
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
             actionBar.hide();
-        }
-
-        if (getSupportActionBar() != null) {
-            getSupportActionBar().hide();
         }
 
         fabMain = findViewById(R.id.fab_main);
@@ -160,7 +163,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-
     public void setBottomNavigationVisibility(boolean visible) {
         BottomNavigationView navView = binding.navView;
         if (navView != null) {
@@ -187,23 +189,20 @@ public class MainActivity extends AppCompatActivity {
 
         fabMain.setOnClickListener(v -> {
             switch (userType) {
-                case "regular": // OPERADOR
-                    navController.navigate(R.id.addParadaFragment);
-                    break;
-
-                case "MOP": // ENGENHEIRO
+                case TIPO_USUARIO_COMUM: // OPERADOR
+                case TIPO_USUARIO_MANUTENCAO: // ENGENHEIRO
                     navController.navigate(R.id.addParadaFragment);
                     break;
 
                 default:
-                    Toast.makeText(this, "Ação não disponível para seu perfil", Toast.LENGTH_SHORT).show();
+                    CustomToast.showWarning(this, "Ação não disponível para seu perfil");
                     break;
             }
         });
     }
 
     private boolean userHasFabPermission() {
-        return "regular".equals(userType) || "MOP".equals(userType);
+        return userType == TIPO_USUARIO_COMUM || userType == TIPO_USUARIO_MANUTENCAO;
     }
 
     private void closeFab(FloatingActionButton... fabs) {
@@ -223,15 +222,29 @@ public class MainActivity extends AppCompatActivity {
     }
 
     // -------------------- Usuário e navegação --------------------
-    public String getUserType() {
+    public int getUserType() { // Mudar para retornar int
         return userType;
+    }
+
+    // Método auxiliar para obter como string (se necessário em outros lugares)
+    public String getUserTypeAsString() {
+        switch (userType) {
+            case TIPO_USUARIO_COMUM:
+                return "regular";
+            case TIPO_USUARIO_MANUTENCAO:
+                return "man";
+            case TIPO_USUARIO_ADMIN:
+                return "RH";
+            default:
+                return "regular";
+        }
     }
 
     private void setupNavigationByUserType() {
         BottomNavigationView navView = binding.navView;
         AppBarConfiguration appBarConfiguration;
 
-        if ("regular".equals(userType)) {
+        if (userType == TIPO_USUARIO_COMUM) {
             // OPERADOR - apenas home
             appBarConfiguration = new AppBarConfiguration.Builder(
                     R.id.navigation_home
@@ -239,7 +252,7 @@ public class MainActivity extends AppCompatActivity {
 
             configureMenuVisibility(navView, true, false, false);
 
-        } else if ("MOP".equals(userType)) {
+        } else if (userType == TIPO_USUARIO_MANUTENCAO) {
             // ENGENHEIRO - home, dashboard, calendar
             appBarConfiguration = new AppBarConfiguration.Builder(
                     R.id.navigation_home,
@@ -261,7 +274,7 @@ public class MainActivity extends AppCompatActivity {
         NavigationUI.setupWithNavController(navView, navController);
 
         // Navega para a tela inicial baseada no tipo de usuário
-        if ("regular".equals(userType) || "MOP".equals(userType)) {
+        if (userType == TIPO_USUARIO_COMUM || userType == TIPO_USUARIO_MANUTENCAO) {
             navController.navigate(R.id.navigation_home);
         }
     }

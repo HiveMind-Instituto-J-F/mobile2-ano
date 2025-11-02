@@ -479,19 +479,19 @@
 
             <!-- Botão Finalizar Parada (visível apenas para engenheiros) -->
             <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnFinalizarParada"
+                android:id="@+id/btnManutencao"
                 android:layout_width="match_parent"
                 android:layout_height="50dp"
                 android:layout_marginTop="16dp"
-                android:text="Finalizar Parada"
+                android:text="Adicionar manutencao"
                 android:textColor="@color/white_off"
                 android:textSize="16sp"
                 android:textStyle="bold"
                 android:visibility="gone"
-                app:icon="@drawable/ic_check"
-                app:iconTint="@color/white_off"
                 app:backgroundTint="@color/blue_primary"
-                app:cornerRadius="12dp" />
+                app:cornerRadius="12dp"
+                app:icon="@drawable/ic_check"
+                app:iconTint="@color/white_off" />
 
         </LinearLayout>
     </ScrollView>

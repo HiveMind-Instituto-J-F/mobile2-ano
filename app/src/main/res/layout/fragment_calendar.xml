@@ -1,120 +1,201 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/white_off"
-    tools:context=".ui.calendar.CalendarFragment">
+    android:background="#FFFFFF"
+    android:fillViewport="true">
 
-    <!-- Header -->
-    <LinearLayout
-        android:id="@+id/header"
-        android:layout_width="0dp"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@drawable/bg_gradient_header"
-        android:orientation="vertical"
-        android:paddingTop="40dp"
-        android:paddingBottom="24dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        android:padding="8dp">
 
-        <TextView
-            android:id="@+id/textView4"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:fontFamily="@font/lexend_deca_semibold"
-            android:gravity="center"
-            android:text="Calendário de Paradas"
-            android:textColor="@color/white_off"
-            android:textSize="24sp" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:fontFamily="@font/lexend_deca"
-            android:gravity="center"
-            android:text="Visualize as paradas por data"
-            android:textColor="@color/white_off"
-            android:textSize="14sp"
-            android:alpha="0.9"
-            android:layout_marginTop="4dp" />
-    </LinearLayout>
-
-    <!-- Calendar Card -->
-    <androidx.cardview.widget.CardView
-        android:id="@+id/calendarCard"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_margin="16dp"
-        app:cardBackgroundColor="@color/white_off"
-        app:cardCornerRadius="20dp"
-        app:cardElevation="4dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/header">
-
+        <!-- Header com título -->
         <LinearLayout
-            android:layout_width="match_parent"
+            android:id="@+id/headerLayout"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="16dp">
-
-            <com.prolificinteractive.materialcalendarview.MaterialCalendarView
-                android:id="@+id/calendarView"
-                android:layout_width="match_parent"
-                android:layout_height="320dp"
-                android:autoHandwritingEnabled="true"
-                app:mcv_arrowColor="@color/blue_primary"
-                app:mcv_dateTextAppearance="@style/CalendarDateStyled"
-                app:mcv_firstDayOfWeek="monday"
-                app:mcv_headerTextAppearance="@style/CalendarHeaderStyled"
-                app:mcv_selectionColor="@color/blue_primary"
-                app:mcv_showOtherDates="all"
-                app:mcv_weekDayTextAppearance="@style/CalendarWeekStyled" />
-        </LinearLayout>
-    </androidx.cardview.widget.CardView>
-
-    <!-- Lista de Paradas -->
-    <androidx.cardview.widget.CardView
-        android:id="@+id/listCard"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
-        android:layout_marginEnd="16dp"
-        android:layout_marginBottom="16dp"
-        app:cardBackgroundColor="@color/white_off"
-        app:cardCornerRadius="20dp"
-        app:cardElevation="4dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/calendarCard">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="vertical"
-            android:padding="16dp">
+            android:gravity="center"
+            android:padding="16dp"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
 
             <TextView
-                android:layout_width="match_parent"
+                android:id="@+id/textViewTitle"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:fontFamily="@font/lexend_deca_semibold"
-                android:text="Paradas do Dia Selecionado"
+                android:gravity="center"
+                android:text="Registro Total de Paradas"
                 android:textColor="@color/blue_dark"
-                android:textSize="18sp"
-                android:layout_marginBottom="16dp" />
+                android:textSize="24sp"
+                android:textStyle="bold" />
 
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/recyclerViewCalendar"
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="1" />
+            <TextView
+                android:id="@+id/textViewSubtitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:fontFamily="@font/lexend_deca_thin"
+                android:gravity="center"
+                android:text="Controle e monitoramento de paradas"
+                android:textColor="#666666"
+                android:textSize="14sp" />
 
         </LinearLayout>
-    </androidx.cardview.widget.CardView>
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+        <!-- Container da legenda -->
+        <LinearLayout
+            android:id="@+id/containerLegenda"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:padding="12dp"
+            android:background="#F8F9FA"
+            android:elevation="2dp"
+            app:layout_constraintTop_toBottomOf="@+id/headerLayout"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginTop="8dp">
+
+            <!-- A legenda será adicionada dinamicamente aqui -->
+
+        </LinearLayout>
+
+        <!-- Calendário -->
+        <com.prolificinteractive.materialcalendarview.MaterialCalendarView
+            android:id="@+id/calendarView"
+            android:layout_width="380dp"
+            android:layout_height="330dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginEnd="16dp"
+            android:background="#FFFFFF"
+            android:elevation="4dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/containerLegenda"
+            app:mcv_arrowColor="@android:color/transparent"
+            app:mcv_dateTextAppearance="@style/CalendarDate"
+            app:mcv_firstDayOfWeek="monday"
+            app:mcv_headerTextAppearance="@style/CalendarHeader"
+            app:mcv_selectionColor="@android:color/transparent"
+            app:mcv_showOtherDates="all"
+            app:mcv_weekDayTextAppearance="@style/CalendarWeek" />
+
+        <!-- Divisor -->
+        <View
+            android:id="@+id/divider"
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:background="#E0E0E0"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp"
+            app:layout_constraintTop_toBottomOf="@+id/calendarView"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+        <!-- Título da lista -->
+        <TextView
+            android:id="@+id/textListTitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="Paradas do Dia Selecionado"
+            android:textSize="18sp"
+            android:textColor="#333333"
+            android:textStyle="bold"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:paddingTop="12dp"
+            android:paddingBottom="8dp"
+            android:fontFamily="@font/lexend_deca_semibold"
+            app:layout_constraintTop_toBottomOf="@+id/divider"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+        <!-- Lista de paradas -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerViewCalendar"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:clipToPadding="false"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:paddingBottom="8dp"
+            android:background="#FFFFFF"
+            android:minHeight="200dp"
+            app:layout_constraintTop_toBottomOf="@+id/textListTitle"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            tools:listitem="@layout/parada_item_recycleview_calendar" />
+
+        <!-- Estado vazio -->
+        <LinearLayout
+            android:id="@+id/emptyStateLayout"
+            android:layout_width="0dp"
+            android:layout_height="200dp"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:padding="32dp"
+            android:visibility="gone"
+            app:layout_constraintTop_toBottomOf="@+id/textListTitle"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+            <ImageView
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                android:layout_marginBottom="16dp"
+                android:scaleType="centerCrop"
+                android:src="@drawable/calendar"
+                android:tint="#CCCCCC" />
+
+            <TextView
+                android:id="@+id/textEmptyState"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:text="Nenhuma parada encontrada"
+                android:textColor="#666666"
+                android:textSize="16sp"
+                android:textStyle="normal"
+                android:fontFamily="@font/lexend_deca" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:text="Selecione uma data com paradas para visualizar os detalhes"
+                android:textColor="#999999"
+                android:textSize="14sp"
+                android:layout_marginTop="8dp"
+                android:fontFamily="@font/lexend_deca_thin" />
+
+        </LinearLayout>
+
+        <!-- Loading indicator -->
+        <ProgressBar
+            android:id="@+id/progressBar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:indeterminate="true"
+            android:visibility="gone"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</ScrollView>

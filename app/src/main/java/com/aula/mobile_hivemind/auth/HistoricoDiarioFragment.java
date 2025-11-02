@@ -20,17 +20,17 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.aula.mobile_hivemind.R;
 import com.aula.mobile_hivemind.api.RetrofitClient;
 import com.aula.mobile_hivemind.api.SqlApiService;
+import com.aula.mobile_hivemind.dto.ManutencaoResponseDTO;
 import com.aula.mobile_hivemind.dto.MaquinaResponseDTO;
 import com.aula.mobile_hivemind.dto.ParadaSQLResponseDTO;
 import com.aula.mobile_hivemind.dto.RegistroParadaResponseDTO;
 import com.aula.mobile_hivemind.recyclerViewParadas.Parada;
 import com.aula.mobile_hivemind.recyclerViewParadas.ParadaAdapter;
+import com.aula.mobile_hivemind.utils.SharedPreferencesManager;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -42,14 +42,21 @@ import retrofit2.Response;
 public class HistoricoDiarioFragment extends Fragment {
 
     private RecyclerView recyclerViewHistorico;
-    private TextView txtTitulo;
+    private TextView txtTitulo, txtParada;
     private ImageButton btnVoltar;
     private com.aula.mobile_hivemind.api.ApiService apiService;
-    private ParadaAdapter historicoAdapter; // Use ParadaAdapter em vez de HistoricoAdapter
+    private ParadaAdapter historicoAdapter;
     private List<Parada> historicoParadas;
     private SqlApiService sqlApiService;
     private LinearLayout emptyState;
     private TextView txtTotalHoje, txtDataAtual;
+
+    // Tipos de usuário como strings
+    private static final String TIPO_USUARIO_COMUM = "regular";
+    private static final String TIPO_USUARIO_MANUTENCAO = "man";
+
+    private String tipoUsuario;
+    private int usuarioId;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -61,12 +68,19 @@ public class HistoricoDiarioFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        // Inicializar views com verificações de null
+        // Obter tipo de usuário como string
+        tipoUsuario = getTipoUsuarioComoString();
+        usuarioId = SharedPreferencesManager.getInstance(requireContext()).getUserId();
+
+        Log.d("HistoricoDiario", "Tipo usuário: " + tipoUsuario + ", ID: " + usuarioId);
+
+        // Inicializar views
         emptyState = view.findViewById(R.id.emptyState);
         txtTotalHoje = view.findViewById(R.id.txtTotalHoje);
         txtDataAtual = view.findViewById(R.id.txtDataAtual);
         recyclerViewHistorico = view.findViewById(R.id.recyclerViewHistorico);
         txtTitulo = view.findViewById(R.id.txtTitulo);
+        txtParada = view.findViewById(R.id.txtParada);
         btnVoltar = view.findViewById(R.id.btnVoltar);
 
         // Verificar se todas as views foram encontradas
@@ -81,6 +95,9 @@ public class HistoricoDiarioFragment extends Fragment {
         String dataAtual = sdf.format(new Date());
         txtDataAtual.setText(dataAtual);
 
+        // Configurar interface baseada no tipo de usuário
+        configurarInterfacePorTipoUsuario();
+
         apiService = RetrofitClient.getApiService();
         sqlApiService = RetrofitClient.getSqlApiService();
         historicoParadas = new ArrayList<>();
@@ -94,8 +111,45 @@ public class HistoricoDiarioFragment extends Fragment {
         });
     }
 
+    private String getTipoUsuarioComoString() {
+        // Obter do SharedPreferencesManager (que retorna int)
+        int tipoInt = SharedPreferencesManager.getInstance(requireContext()).getUserType();
+
+        Log.d("HistoricoDebug", "Tipo int do SharedPrefs: " + tipoInt);
+
+        // Converter int para string conforme o mapeamento do LoginActivity
+        switch (tipoInt) {
+            case 1:
+                return "regular";
+            case 2:
+                return "man";
+            case 3:
+                return "RH";
+            default:
+                return "regular";
+        }
+    }
+
+    private void configurarInterfacePorTipoUsuario() {
+        if (txtTitulo != null) {
+            if (TIPO_USUARIO_MANUTENCAO.equals(tipoUsuario)) {
+                txtTitulo.setText("Histórico de Manutenções");
+                if (txtParada != null) {
+                    txtParada.setText("Manutenções de hoje");
+                }
+            } else {
+                txtTitulo.setText("Minhas Paradas");
+                if (txtParada != null) {
+                    txtParada.setText("Paradas de hoje");
+                }
+            }
+        }
+    }
+
     private void setupRecyclerView() {
-        historicoAdapter = new ParadaAdapter(historicoParadas, sqlApiService);
+        boolean mostrarAcoes = TIPO_USUARIO_MANUTENCAO.equals(tipoUsuario);
+
+        historicoAdapter = new ParadaAdapter(historicoParadas, sqlApiService, mostrarAcoes);
         recyclerViewHistorico.setLayoutManager(new LinearLayoutManager(getContext()));
         recyclerViewHistorico.setAdapter(historicoAdapter);
 
@@ -147,6 +201,7 @@ public class HistoricoDiarioFragment extends Fragment {
         if (btnFechar != null) {
             btnFechar.setOnClickListener(v -> bottomSheetDialog.dismiss());
         }
+
     }
 
     private void processarHorasEDuracao(Parada parada, TextView txtHoraInicio, TextView txtHoraFim, TextView txtDuracao) {
@@ -200,7 +255,6 @@ public class HistoricoDiarioFragment extends Fragment {
 
         txtNomeMaquina.setText("Carregando...");
 
-        // Buscar todas as máquinas e filtrar pelo ID
         Call<List<MaquinaResponseDTO>> call = sqlApiService.listarMaquinas();
         call.enqueue(new Callback<List<MaquinaResponseDTO>>() {
             @Override
@@ -209,7 +263,6 @@ public class HistoricoDiarioFragment extends Fragment {
                     List<MaquinaResponseDTO> maquinas = response.body();
                     String nomeMaquinaEncontrada = "Máquina não encontrada";
 
-                    // Buscar máquina pelo ID
                     for (MaquinaResponseDTO maquina : maquinas) {
                         if (maquina.getId() != null && maquina.getId().equals(idMaquina.longValue())) {
                             nomeMaquinaEncontrada = maquina.getNome() != null ? maquina.getNome() : "Máquina " + idMaquina;
@@ -233,79 +286,148 @@ public class HistoricoDiarioFragment extends Fragment {
     private void carregarHistoricoDiario() {
         if (!isAdded() || getContext() == null) return;
 
-        Call<List<RegistroParadaResponseDTO>> call = apiService.getAllRegistros();
-        call.enqueue(new Callback<List<RegistroParadaResponseDTO>>() {
+        if (TIPO_USUARIO_MANUTENCAO.equals(tipoUsuario)) {
+            carregarManutencoesDoDia();
+        } else {
+            carregarParadasDoDia();
+        }
+    }
+
+    private void carregarParadasDoDia() {
+        Call<List<RegistroParadaResponseDTO>> callMongo = apiService.getAllRegistros();
+        callMongo.enqueue(new Callback<List<RegistroParadaResponseDTO>>() {
             @Override
             public void onResponse(Call<List<RegistroParadaResponseDTO>> call, Response<List<RegistroParadaResponseDTO>> response) {
                 if (!isAdded() || getContext() == null) return;
 
                 if (response.isSuccessful() && response.body() != null) {
-                    processarParadasDoDiaMongoDB(response.body()); // Método corrigido
+                    List<Parada> paradasDoDia = filtrarParadasDoDia(response.body());
+
+                    if (paradasDoDia.isEmpty()) {
+                        carregarParadasSQL();
+                    } else {
+                        processarParadasDoDia(paradasDoDia);
+                    }
                 } else {
-                    mostrarHistoricoVazio();
+                    carregarParadasSQL();
                 }
             }
 
             @Override
             public void onFailure(Call<List<RegistroParadaResponseDTO>> call, Throwable t) {
                 if (!isAdded() || getContext() == null) return;
+                carregarParadasSQL();
+            }
+        });
+    }
+
+    private void carregarParadasSQL() {
+        Call<List<ParadaSQLResponseDTO>> callSQL = sqlApiService.listarTodasParadas();
+        callSQL.enqueue(new Callback<List<ParadaSQLResponseDTO>>() {
+            @Override
+            public void onResponse(Call<List<ParadaSQLResponseDTO>> call, Response<List<ParadaSQLResponseDTO>> response) {
+                if (!isAdded() || getContext() == null) return;
+
+                if (response.isSuccessful() && response.body() != null) {
+                    List<Parada> paradasDoDia = filtrarParadasSQLDoDia(response.body());
+                    processarParadasDoDia(paradasDoDia);
+                } else {
+                    mostrarHistoricoVazio();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<ParadaSQLResponseDTO>> call, Throwable t) {
+                if (!isAdded() || getContext() == null) return;
                 mostrarHistoricoVazio();
             }
         });
     }
 
-    private void processarParadasDoDiaMongoDB(List<RegistroParadaResponseDTO> paradasMongo) {
-        if (!isAdded() || getContext() == null) return;
+    private void carregarManutencoesDoDia() {
+        Call<List<ManutencaoResponseDTO>> call = sqlApiService.listarManutencoes();
+        call.enqueue(new Callback<List<ManutencaoResponseDTO>>() {
+            @Override
+            public void onResponse(Call<List<ManutencaoResponseDTO>> call, Response<List<ManutencaoResponseDTO>> response) {
+                if (!isAdded() || getContext() == null) return;
 
-        List<Parada> paradasDoDia = new ArrayList<>();
-
-        // Obter data atual
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-        String dataAtual = sdf.format(new Date());
-
-        for (RegistroParadaResponseDTO paradaMongo : paradasMongo) {
-            try {
-                if (paradaMongo.getDt_parada() != null) {
-                    String dataParada = sdf.format(paradaMongo.getDt_parada());
-                    if (dataParada.equals(dataAtual)) {
-                        // Converter para objeto Parada
-                        Parada parada = converterParaParada(paradaMongo);
-                        paradasDoDia.add(parada);
-                    }
+                if (response.isSuccessful() && response.body() != null) {
+                    List<Parada> manutencoesDoDia = filtrarManutencoesDoDia(response.body());
+                    processarParadasDoDia(manutencoesDoDia);
+                } else {
+                    mostrarHistoricoVazio();
                 }
-            } catch (Exception e) {
-                Log.e("HistoricoDiario", "Erro ao processar parada MongoDB: " + e.getMessage());
             }
-        }
 
-        // Atualizar UI na thread principal
-        requireActivity().runOnUiThread(() -> {
-            atualizarUIHistorico(paradasDoDia);
+            @Override
+            public void onFailure(Call<List<ManutencaoResponseDTO>> call, Throwable t) {
+                if (!isAdded() || getContext() == null) return;
+                mostrarHistoricoVazio();
+            }
         });
     }
 
-    private void processarParadasDoDiaSQL(List<ParadaSQLResponseDTO> todasParadas) {
-        if (!isAdded() || getContext() == null) return;
-
+    private List<Parada> filtrarParadasDoDia(List<RegistroParadaResponseDTO> todasParadas) {
         List<Parada> paradasDoDia = new ArrayList<>();
-
-        // Obter data atual
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
         String dataAtual = sdf.format(new Date());
 
-        for (ParadaSQLResponseDTO paradaSQL : todasParadas) {
+        for (RegistroParadaResponseDTO parada : todasParadas) {
             try {
-                if (paradaSQL.getDt_parada() != null && paradaSQL.getDt_parada().equals(dataAtual)) {
-                    // Converter para objeto Parada
-                    Parada parada = converterParadaSQLParaParada(paradaSQL);
-                    paradasDoDia.add(parada);
+                if (parada.getDt_parada() != null) {
+                    String dataParada = sdf.format(parada.getDt_parada());
+                    if (dataParada.equals(dataAtual)) {
+                        paradasDoDia.add(converterParaParada(parada));
+                    }
                 }
             } catch (Exception e) {
-                Log.e("HistoricoDiario", "Erro ao processar parada SQL: " + e.getMessage());
+                Log.e("HistoricoDiario", "Erro ao filtrar parada MongoDB: " + e.getMessage());
             }
         }
 
-        // Atualizar UI na thread principal
+        return paradasDoDia;
+    }
+
+    private List<Parada> filtrarParadasSQLDoDia(List<ParadaSQLResponseDTO> todasParadas) {
+        List<Parada> paradasDoDia = new ArrayList<>();
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        String dataAtual = sdf.format(new Date());
+
+        for (ParadaSQLResponseDTO parada : todasParadas) {
+            try {
+                if (parada.getDt_parada() != null && parada.getDt_parada().equals(dataAtual)) {
+                    paradasDoDia.add(converterParadaSQLParaParada(parada));
+                }
+            } catch (Exception e) {
+                Log.e("HistoricoDiario", "Erro ao filtrar parada SQL: " + e.getMessage());
+            }
+        }
+
+        return paradasDoDia;
+    }
+
+    private List<Parada> filtrarManutencoesDoDia(List<ManutencaoResponseDTO> todasManutencoes) {
+        List<Parada> manutencoesDoDia = new ArrayList<>();
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        String dataAtual = sdf.format(new Date());
+
+        for (ManutencaoResponseDTO manutencao : todasManutencoes) {
+            try {
+                if (manutencao.getDate() != null) {
+                    String dataManutencao = sdf.format(manutencao.getDate());
+                    if (dataManutencao.equals(dataAtual)) {
+                        manutencoesDoDia.add(converterManutencaoParaParada(manutencao));
+                    }
+                }
+            } catch (Exception e) {
+                Log.e("HistoricoDiario", "Erro ao filtrar manutenção: " + e.getMessage());
+            }
+        }
+
+        return manutencoesDoDia;
+    }
+
+    private void processarParadasDoDia(List<Parada> paradasDoDia) {
         requireActivity().runOnUiThread(() -> {
             atualizarUIHistorico(paradasDoDia);
         });
@@ -314,84 +436,35 @@ public class HistoricoDiarioFragment extends Fragment {
     private void mostrarHistoricoVazio() {
         if (!isAdded() || getContext() == null) return;
 
-        // Atualizar UI com lista vazia
         requireActivity().runOnUiThread(() -> {
             atualizarUIHistorico(new ArrayList<>());
         });
     }
 
     private void atualizarUIHistorico(List<Parada> paradasDoDia) {
-        // Verificar se as views foram inicializadas
         if (emptyState == null || recyclerViewHistorico == null || txtTotalHoje == null) {
             Log.e("HistoricoDiario", "Views não inicializadas corretamente");
             return;
         }
 
         if (paradasDoDia.isEmpty()) {
-            // Mostrar estado vazio
             emptyState.setVisibility(View.VISIBLE);
             recyclerViewHistorico.setVisibility(View.GONE);
-
-            // Atualizar estatísticas para zero
             txtTotalHoje.setText("0");
-
-            // Limpar adapter
             historicoParadas.clear();
             if (historicoAdapter != null) {
                 historicoAdapter.notifyDataSetChanged();
             }
         } else {
-            // Mostrar lista
             emptyState.setVisibility(View.GONE);
             recyclerViewHistorico.setVisibility(View.VISIBLE);
-
-            // Calcular estatísticas
-            int totalParadas = paradasDoDia.size();
-
-            // Atualizar estatísticas
-            txtTotalHoje.setText(String.valueOf(totalParadas));
-
-            // Atualizar adapter existente (não criar novo)
+            txtTotalHoje.setText(String.valueOf(paradasDoDia.size()));
             historicoParadas.clear();
             historicoParadas.addAll(paradasDoDia);
             if (historicoAdapter != null) {
                 historicoAdapter.notifyDataSetChanged();
             }
         }
-    }
-
-    private Parada converterParadaSQLParaParada(ParadaSQLResponseDTO paradaSQL) {
-        Date dataParada = null;
-        Date horaInicio = null;
-        Date horaFim = null;
-
-        try {
-            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-            SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss", Locale.getDefault());
-
-            if (paradaSQL.getDt_parada() != null) {
-                dataParada = dateFormat.parse(paradaSQL.getDt_parada());
-            }
-            if (paradaSQL.getHora_inicio() != null) {
-                horaInicio = timeFormat.parse(paradaSQL.getHora_inicio());
-            }
-            if (paradaSQL.getHora_fim() != null) {
-                horaFim = timeFormat.parse(paradaSQL.getHora_fim());
-            }
-        } catch (ParseException e) {
-            Log.e("HistoricoDiario", "Erro ao converter datas SQL", e);
-        }
-
-        return new Parada(
-                null,
-                paradaSQL.getId_maquina(),
-                paradaSQL.getId_usuario(),
-                paradaSQL.getDes_parada(),
-                paradaSQL.getDes_setor(),
-                dataParada,
-                horaFim,
-                horaInicio
-        );
     }
 
     private Parada converterParaParada(RegistroParadaResponseDTO registro) {
@@ -404,6 +477,65 @@ public class HistoricoDiarioFragment extends Fragment {
                 registro.getDt_parada(),
                 registro.getHora_Fim(),
                 registro.getHora_Inicio()
+        );
+    }
+
+    private Parada converterParadaSQLParaParada(ParadaSQLResponseDTO paradaSQL) {
+        try {
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+            SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss", Locale.getDefault());
+
+            Date dataParada = null;
+            Date horaInicio = null;
+            Date horaFim = null;
+
+            if (paradaSQL.getDt_parada() != null) {
+                dataParada = dateFormat.parse(paradaSQL.getDt_parada());
+            }
+            if (paradaSQL.getHora_inicio() != null) {
+                horaInicio = timeFormat.parse(paradaSQL.getHora_inicio());
+            }
+            if (paradaSQL.getHora_fim() != null) {
+                horaFim = timeFormat.parse(paradaSQL.getHora_fim());
+            }
+
+            return new Parada(
+                    null,
+                    paradaSQL.getId_manutencao(),
+                    paradaSQL.getId_maquina(),
+                    paradaSQL.getId_usuario(),
+                    paradaSQL.getDes_parada(),
+                    paradaSQL.getDes_setor(),
+                    dataParada,
+                    horaFim,
+                    horaInicio
+            );
+        } catch (Exception e) {
+            Log.e("HistoricoDiario", "Erro ao converter parada SQL: " + e.getMessage());
+            return new Parada(
+                    null,
+                    paradaSQL.getId_manutencao(),
+                    paradaSQL.getId_maquina(),
+                    paradaSQL.getId_usuario(),
+                    paradaSQL.getDes_parada(),
+                    paradaSQL.getDes_setor(),
+                    null,
+                    null,
+                    null
+            );
+        }
+    }
+
+    private Parada converterManutencaoParaParada(ManutencaoResponseDTO manutencao) {
+        return new Parada(
+                String.valueOf(manutencao.getId()),
+                manutencao.getId_maquina(),
+                manutencao.getId_usuario(),
+                manutencao.getDescricao(),
+                manutencao.getSetor(),
+                manutencao.getDate(),
+                manutencao.getHora_fim(),
+                manutencao.getHora_inicio()
         );
     }
 

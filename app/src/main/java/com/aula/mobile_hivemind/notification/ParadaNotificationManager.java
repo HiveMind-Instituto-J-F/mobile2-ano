@@ -7,7 +7,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
-import android.widget.Toast;
 
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
@@ -15,6 +14,7 @@ import androidx.core.app.NotificationManagerCompat;
 
 import com.aula.mobile_hivemind.MainActivity;
 import com.aula.mobile_hivemind.R;
+import com.aula.mobile_hivemind.utils.CustomToast;
 
 public class ParadaNotificationManager {
 
@@ -64,7 +64,7 @@ public class ParadaNotificationManager {
         // Verificar permissão
         if (ActivityCompat.checkSelfPermission(context, android.Manifest.permission.POST_NOTIFICATIONS)
                 != PackageManager.PERMISSION_GRANTED) {
-            Toast.makeText(context, "Permissão para notificações necessária", Toast.LENGTH_SHORT).show();
+            CustomToast.showWarning(context, "Permissão para notificações necessária");
             return;
         }
 

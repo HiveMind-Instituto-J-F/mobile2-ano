@@ -3,7 +3,6 @@ package com.aula.mobile_hivemind.ui.home;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
@@ -15,15 +14,13 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageButton;
-import android.widget.ImageView;
 import android.widget.PopupMenu;
-import androidx.appcompat.widget.SearchView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatDelegate;
+import androidx.appcompat.widget.SearchView;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
@@ -35,11 +32,11 @@ import com.aula.mobile_hivemind.R;
 import com.aula.mobile_hivemind.api.RetrofitClient;
 import com.aula.mobile_hivemind.api.SqlApiService;
 import com.aula.mobile_hivemind.dto.MaquinaResponseDTO;
-import com.aula.mobile_hivemind.dto.ParadaSQLRequestDTO;
 import com.aula.mobile_hivemind.dto.RegistroParadaResponseDTO;
-import com.aula.mobile_hivemind.notification.ParadaNotificationManager;
 import com.aula.mobile_hivemind.recyclerViewParadas.Parada;
 import com.aula.mobile_hivemind.recyclerViewParadas.ParadaAdapter;
+import com.aula.mobile_hivemind.utils.CustomToast;
+import com.aula.mobile_hivemind.utils.SharedPreferencesManager;
 import com.bumptech.glide.Glide;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.button.MaterialButton;
@@ -68,6 +65,7 @@ public class HomeFragment extends Fragment {
         void onNomeEncontrado(String nomeUsuario);
         void onErro(String mensagemErro);
     }
+
     private TextView textMensagem;
     private MaterialButton filtrarParadas;
     private ChipGroup chipGroupSetores;
@@ -78,23 +76,24 @@ public class HomeFragment extends Fragment {
     private List<Parada> allParadasList;
     private com.aula.mobile_hivemind.api.ApiService apiService;
     private FirebaseFirestore db;
-    private SharedPreferences sharedPreferences;
+    private SharedPreferencesManager prefsManager;
     private String userEmail;
     private String userType;
+    private int userIntType;
     private String userSetor;
+    private int userId;
     private ShapeableImageView avatar;
     private SqlApiService sqlApiService;
     private BottomSheetDialog bottomSheetDialog;
     private List<MaquinaResponseDTO> listaMaquinas;
     private ShapeableImageView btnProfileMenu;
     private PopupMenu profilePopupMenu;
+    private SearchView searchView;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_home, container, false);
-
-        sharedPreferences = requireContext().getSharedPreferences("ProfilePrefs", Context.MODE_PRIVATE);
         return view;
     }
 
@@ -102,15 +101,19 @@ public class HomeFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        sharedPreferences = requireContext().getSharedPreferences("ProfilePrefs", Context.MODE_PRIVATE);
+        // Usar SharedPreferencesManager em vez de SharedPreferences direto
+        prefsManager = SharedPreferencesManager.getInstance(requireContext());
 
         textMensagem = view.findViewById(R.id.textMensagem);
 
-        String userName = sharedPreferences.getString("user_name", "Usuário");
+        // Obter dados do SharedPreferencesManager
+        String userName = prefsManager.getUserName();
+        userEmail = prefsManager.getUserEmail();
+        userId = prefsManager.getUserId();
+
         textMensagem.setText("Olá, " + userName + "! Seja Bem-vindo(a)!");
 
-        SearchView searchView = view.findViewById(R.id.searchView);
-
+        searchView = view.findViewById(R.id.searchView);
         searchView.setIconifiedByDefault(false);
 
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
@@ -126,7 +129,6 @@ public class HomeFragment extends Fragment {
                 return true;
             }
         });
-
 
         btnProfileMenu = view.findViewById(R.id.btnProfileMenu);
         setupProfileMenu();
@@ -153,7 +155,7 @@ public class HomeFragment extends Fragment {
 
         filtrarParadas.setOnClickListener(v -> {
             if ("regular".equals(userType)) {
-                Toast.makeText(getContext(), "Operador: Visualizando apenas paradas do setor " + userSetor, Toast.LENGTH_SHORT).show();
+                CustomToast.showInfo(getContext(), "Operador: Visualizando apenas paradas do setor " + userSetor);
                 return;
             }
             chipGroupSetores.setVisibility(chipGroupSetores.getVisibility() == View.GONE ? View.VISIBLE : View.GONE);
@@ -211,7 +213,6 @@ public class HomeFragment extends Fragment {
     }
 
     private void abrirPerfil() {
-        // Navegar para fragment de perfil
         if (getActivity() instanceof MainActivity) {
             NavController navController = Navigation.findNavController(requireActivity(), R.id.nav_host_fragment_activity_main);
             navController.navigate(R.id.navigation_logout);
@@ -219,7 +220,6 @@ public class HomeFragment extends Fragment {
     }
 
     private void abrirHistoricoNotificacoes() {
-        // Navegar para fragment de histórico de notificações
         if (getActivity() instanceof MainActivity) {
             NavController navController = Navigation.findNavController(requireActivity(), R.id.nav_host_fragment_activity_main);
             navController.navigate(R.id.notificationHistoryFragment);
@@ -228,10 +228,15 @@ public class HomeFragment extends Fragment {
 
     private void obterInformacoesUsuarioECarregarParadas() {
         if (getActivity() instanceof MainActivity) {
-            userType = ((MainActivity) getActivity()).getUserType();
+            userIntType = ((MainActivity) getActivity()).getUserType();
         }
 
-        userEmail = sharedPreferences.getString("user_email", null);
+        // Já obtidos no onViewCreated, mas podemos verificar novamente
+        userEmail = prefsManager.getUserEmail();
+        userId = prefsManager.getUserId();
+
+        Log.d("HomeFragment", "userEmail ATUAL: " + userEmail);
+        Log.d("HomeFragment", "userId ATUAL: " + userId);
 
         if (userEmail != null && !userEmail.isEmpty()) {
             db.collection("trabalhadores")
@@ -248,31 +253,31 @@ public class HomeFragment extends Fragment {
                             if (userType == null && tipoPerfilOriginal != null) {
                                 switch (tipoPerfilOriginal.toLowerCase()) {
                                     case "operador": userType = "regular"; break;
-                                    case "engenheiro": userType = "MOP"; break;
+                                    case "engenheiro": userType = "man"; break;
                                     case "supervisor": userType = "RH"; break;
                                     default: userType = "regular";
                                 }
                             }
 
-                            SharedPreferences.Editor editor = sharedPreferences.edit();
-                            editor.putString("user_setor", userSetor);
-                            editor.putString("user_type", userType);
-
+                            // Salvar no SharedPreferencesManager se necessário
                             if (sqlId != null) {
-                                editor.putInt("user_id", sqlId.intValue());
+                                prefsManager.setUserId(sqlId.intValue());
                             }
 
                             buscarNomeDoUsuarioAtual(userEmail, new UsuarioNomeCallback() {
                                 @Override
                                 public void onNomeEncontrado(String nomeUsuario) {
-                                    editor.putString("user_name", nomeUsuario);
-                                    editor.apply();
-                                    textMensagem.setText("Olá, " + nomeUsuario + "! Seja bem-vindo(a)!");
+                                    prefsManager.setUserName(nomeUsuario);
+                                    if (isAdded() && getContext() != null) {
+                                        requireActivity().runOnUiThread(() -> {
+                                            textMensagem.setText("Olá, " + nomeUsuario + "! Seja bem-vindo(a)!");
+                                        });
+                                    }
                                 }
 
                                 @Override
                                 public void onErro(String mensagemErro) {
-                                    editor.apply();
+                                    Log.e("HomeFragment", "Erro ao buscar nome: " + mensagemErro);
                                 }
                             });
 
@@ -280,25 +285,26 @@ public class HomeFragment extends Fragment {
                         carregarParadas();
                     })
                     .addOnFailureListener(e -> {
+                        Log.e("HomeFragment", "Erro ao buscar informações do usuário: " + e.getMessage());
                         carregarParadas();
                     });
         } else {
+            Log.e("HomeFragment", "Email do usuário não encontrado no SharedPreferencesManager");
             carregarParadas();
         }
     }
 
     private String getProfileImageKey() {
-        String userEmail = sharedPreferences.getString("user_email", null);
+        String userEmail = prefsManager.getUserEmail();
         return "profile_image_" + (userEmail != null ? userEmail.hashCode() : "default");
     }
 
     private String getCloudinaryUrlKey() {
-        String userEmail = sharedPreferences.getString("user_email", null);
+        String userEmail = prefsManager.getUserEmail();
         return "cloudinary_url_" + (userEmail != null ? userEmail.hashCode() : "default");
     }
 
     private void carregarImagemPerfil() {
-        // Verificar se o fragment está anexado à Activity
         if (!isAdded() || getContext() == null) {
             Log.d("HomeFragment", "Fragment não está anexado, abortando carregamento de imagem");
             return;
@@ -311,7 +317,11 @@ public class HomeFragment extends Fragment {
 
         Log.d("HomeFragment", "Carregando imagem do perfil no btnProfileMenu");
 
-        String cloudinaryUrl = sharedPreferences.getString(getCloudinaryUrlKey(), null);
+        // Para imagens, ainda precisamos usar SharedPreferences direto pois o SharedPreferencesManager
+        // não gerencia as imagens. Mas podemos migrar isso também se necessário.
+        android.content.SharedPreferences imagePrefs = requireContext().getSharedPreferences("ProfilePrefs", Context.MODE_PRIVATE);
+
+        String cloudinaryUrl = imagePrefs.getString(getCloudinaryUrlKey(), null);
         if (cloudinaryUrl != null && !cloudinaryUrl.isEmpty()) {
             Log.d("HomeFragment", "Carregando imagem do Cloudinary: " + cloudinaryUrl);
             Glide.with(requireContext())
@@ -323,7 +333,7 @@ public class HomeFragment extends Fragment {
             return;
         }
 
-        String encodedImage = sharedPreferences.getString(getProfileImageKey(), null);
+        String encodedImage = imagePrefs.getString(getProfileImageKey(), null);
         if (encodedImage != null && !encodedImage.isEmpty()) {
             Log.d("HomeFragment", "Carregando imagem codificada em Base64");
             try {
@@ -379,15 +389,16 @@ public class HomeFragment extends Fragment {
         processarHorasEDuracao(parada, txtHoraInicio, txtHoraFim, txtDuracao);
         buscarNomeMaquinaPorId(parada.getId_maquina(), txtNomeMaquina);
 
-        Button btnFinalizarParada = modalView.findViewById(R.id.btnFinalizarParada);
-        if (btnFinalizarParada != null && "MOP".equals(userType)) {
-            btnFinalizarParada.setVisibility(View.VISIBLE);
-            btnFinalizarParada.setOnClickListener(v -> {
-                RegistroParadaResponseDTO paradaMongo = converterParaRegistroParadaDTO(parada);
-                finalizarParada(paradaMongo);
+        // BOTÃO MANUTENÇÃO - MANTIDO
+        Button btnManutencao = modalView.findViewById(R.id.btnManutencao);
+        if (btnManutencao != null && "man".equals(userType)) {
+            btnManutencao.setVisibility(View.VISIBLE);
+            btnManutencao.setOnClickListener(v -> {
+                bottomSheetDialog.dismiss();
+                finalizarParada(parada);
             });
         } else {
-            btnFinalizarParada.setVisibility(View.GONE);
+            btnManutencao.setVisibility(View.GONE);
         }
 
         bottomSheetDialog = new BottomSheetDialog(requireContext());
@@ -403,7 +414,6 @@ public class HomeFragment extends Fragment {
     private void processarHorasEDuracao(Parada parada, TextView txtHoraInicio, TextView txtHoraFim, TextView txtDuracao) {
         try {
             SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm", Locale.getDefault());
-
             timeFormat.setTimeZone(TimeZone.getDefault());
 
             if (parada.getHora_Inicio() != null) {
@@ -422,7 +432,6 @@ public class HomeFragment extends Fragment {
                 long diff = parada.getHora_Fim().getTime() - parada.getHora_Inicio().getTime();
 
                 if (diff < 0) {
-                    // Adicionar 24 horas para corrigir
                     diff += 24 * 60 * 60 * 1000;
                 }
 
@@ -541,11 +550,8 @@ public class HomeFragment extends Fragment {
             @Override
             public void onFailure(Call<List<RegistroParadaResponseDTO>> call, Throwable t) {
                 if (isAdded() && getContext() != null) {
-                    requireActivity().runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            Toast.makeText(requireContext(), "Falha na conexão: " + t.getMessage(), Toast.LENGTH_LONG).show();
-                        }
+                    requireActivity().runOnUiThread(() -> {
+                        CustomToast.showError(requireContext(), "Falha na conexão: " + t.getMessage());
                     });
                 } else {
                     Log.e("HomeFragment", "Fragment não está anexado, não é possível mostrar Toast");
@@ -587,7 +593,6 @@ public class HomeFragment extends Fragment {
         paradaAdapter.notifyDataSetChanged();
     }
 
-
     private Parada converterParaParada(RegistroParadaResponseDTO registro) {
         return new Parada(
                 registro.getId(),
@@ -625,13 +630,11 @@ public class HomeFragment extends Fragment {
 
         chipGroupSetores.setOnCheckedStateChangeListener((group, checkedIds) -> {
             if (checkedIds.isEmpty() || chipTodos.isChecked()) {
-                // Se "Todos" estiver ativo, mostra todas
                 chipTodos.setChecked(true);
                 paradaAdapter.setParadas(new ArrayList<>(allParadasList));
                 return;
             }
 
-            // Caso contrário, mostra apenas as selecionadas
             List<String> setoresSelecionados = new ArrayList<>();
             for (int id : checkedIds) {
                 Chip chip = group.findViewById(id);
@@ -661,46 +664,41 @@ public class HomeFragment extends Fragment {
         return filteredList;
     }
 
-    private void finalizarParada(RegistroParadaResponseDTO paradaMongo) {
-        new AlertDialog.Builder(requireContext())
-                .setTitle("Finalizar Parada")
-                .setMessage("Tem certeza que deseja finalizar esta parada?")
-                .setPositiveButton("Sim", (dialog, which) -> processarFinalizacao(paradaMongo))
-                .setNegativeButton("Cancelar", null)
-                .show();
+    public void finalizarParada(Parada parada) {
+        if (!"man".equals(userType)) {
+            CustomToast.showWarning(getContext(), "Acesso restrito a engenheiros.");
+            return;
+        }
+
+        Bundle bundle = new Bundle();
+        bundle.putInt("idMaquina", parada.getId_maquina());
+        bundle.putInt("codigoColaborador", parada.getId_usuario());
+        bundle.putString("setor", parada.getDes_setor());
+        bundle.putString("descricaoParada", parada.getDes_parada());
+        bundle.putInt("userId", userId);
+
+        // ✅ ENVIAR DATA E HORÁRIOS DA PARADA ORIGINAL
+        bundle.putString("dataParada", formatarData(parada.getDt_parada()));
+        bundle.putString("horaInicio", formatarHora(parada.getHora_Inicio()));
+        bundle.putString("horaFim", formatarHora(parada.getHora_Fim()));
+
+        // Passar o ID do MongoDB também
+        bundle.putString("idMongo", parada.getId());
+
+        NavController navController = Navigation.findNavController(requireActivity(), R.id.nav_host_fragment_activity_main);
+        navController.navigate(R.id.maintenanceFragment, bundle);
     }
 
-    private void processarFinalizacao(RegistroParadaResponseDTO paradaMongo) {
-        String nomeEngenheiro = obterNomeEngenheiroLogado();
-        ParadaSQLRequestDTO paradaSQL = new ParadaSQLRequestDTO(paradaMongo);
-
-        ProgressDialog progressDialog = new ProgressDialog(requireContext());
-        progressDialog.setMessage("Finalizando parada...");
-        progressDialog.setCancelable(false);
-        progressDialog.show();
-
-        Call<ResponseBody> call = sqlApiService.salvarParadaSQL(paradaSQL);
-        call.enqueue(new Callback<ResponseBody>() {
-            @Override
-            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
-                progressDialog.dismiss();
-                if (response.isSuccessful()) {
-                    excluirParadaMongoDB(paradaMongo.getId(), paradaMongo, nomeEngenheiro);
-                } else {
-                    Toast.makeText(requireContext(), "Erro ao salvar no SQL: " + response.code(), Toast.LENGTH_SHORT).show();
-                }
-            }
-
-            @Override
-            public void onFailure(Call<ResponseBody> call, Throwable t) {
-                progressDialog.dismiss();
-                Toast.makeText(requireContext(), "Falha na conexão SQL: " + t.getMessage(), Toast.LENGTH_SHORT).show();
-            }
-        });
+    private String formatarData(Date data) {
+        if (data == null) return "";
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        return sdf.format(data);
     }
 
-    private String obterNomeEngenheiroLogado() {
-        return sharedPreferences.getString("user_name", "Engenheiro");
+    private String formatarHora(Date date) {
+        if (date == null) return "";
+        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss", Locale.getDefault());
+        return sdf.format(date);
     }
 
     private void buscarNomeDoUsuarioAtual(String userEmail, UsuarioNomeCallback callback) {
@@ -724,182 +722,5 @@ public class HomeFragment extends Fragment {
                 .addOnFailureListener(e -> {
                     callback.onErro("Erro na busca");
                 });
-    }
-
-    private void excluirParadaMongoDB(String idMongo, RegistroParadaResponseDTO paradaMongo, String nomeEngenheiro) {
-        if (idMongo == null || idMongo.isEmpty()) {
-            Toast.makeText(requireContext(), "Erro: ID da parada inválido", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        ProgressDialog progressDialog = new ProgressDialog(requireContext());
-        progressDialog.setMessage("Excluindo do sistema...");
-        progressDialog.setCancelable(false);
-        progressDialog.show();
-
-        Call<ResponseBody> call = apiService.excluirRegistro(idMongo);
-        call.enqueue(new Callback<ResponseBody>() {
-            @Override
-            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
-                progressDialog.dismiss();
-                if (response.isSuccessful()) {
-                    enviarNotificacaoParadaFinalizada(paradaMongo, nomeEngenheiro);
-                    if (bottomSheetDialog != null && bottomSheetDialog.isShowing()) {
-                        bottomSheetDialog.dismiss();
-                    }
-                    Toast.makeText(requireContext(), "Parada finalizada com sucesso!", Toast.LENGTH_SHORT).show();
-                    carregarParadas();
-                } else {
-                    Toast.makeText(requireContext(), "Erro ao excluir do MongoDB", Toast.LENGTH_SHORT).show();
-                }
-            }
-
-            @Override
-            public void onFailure(Call<ResponseBody> call, Throwable t) {
-                progressDialog.dismiss();
-                Toast.makeText(requireContext(), "Erro ao excluir do MongoDB: " + t.getMessage(), Toast.LENGTH_SHORT).show();
-            }
-        });
-    }
-
-    private void enviarNotificacaoParadaFinalizada(RegistroParadaResponseDTO parada, String nomeEngenheiro) {
-        try {
-            String tempoDuracao = calcularTempoDuracao(parada.getHora_Inicio(), parada.getHora_Fim());
-            String nomeMaquina = buscarNomeMaquinaPorId(parada.getId_maquina());
-            String dataParada = formatarData(parada.getDt_parada());
-
-            buscarNomeUsuarioCriador(parada.getId_usuario(), new UsuarioNomeCallback() {
-                @Override
-                public void onNomeEncontrado(String nomeUsuarioCriador) {
-                    ParadaNotificationManager.enviarNotificacaoParadaFinalizada(
-                            requireContext(),
-                            nomeEngenheiro,
-                            nomeMaquina,
-                            tempoDuracao,
-                            dataParada,
-                            nomeUsuarioCriador
-                    );
-                }
-
-                @Override
-                public void onErro(String mensagemErro) {
-                    ParadaNotificationManager.enviarNotificacaoParadaFinalizada(
-                            requireContext(),
-                            nomeEngenheiro,
-                            nomeMaquina,
-                            tempoDuracao,
-                            dataParada,
-                            "Usuário " + parada.getId_usuario()
-                    );
-                }
-            });
-
-        } catch (Exception e) {
-            String dataFallback = parada.getDt_parada() != null ?
-                    new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(parada.getDt_parada()) : "data não informada";
-
-            ParadaNotificationManager.enviarNotificacaoParadaFinalizada(
-                    requireContext(),
-                    nomeEngenheiro != null ? nomeEngenheiro : "Engenheiro",
-                    "Máquina " + parada.getId_maquina(),
-                    "Tempo não calculado",
-                    dataFallback,
-                    "Usuário " + parada.getId_usuario()
-            );
-        }
-    }
-
-    private String formatarData(Date data) {
-        if (data == null) return "data não informada";
-        try {
-            return new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(data);
-        } catch (Exception e) {
-            return "data não informada";
-        }
-    }
-
-    private void buscarNomeUsuarioCriador(Integer idUsuario, UsuarioNomeCallback callback) {
-        if (idUsuario == null) {
-            callback.onErro("ID do usuário é nulo");
-            return;
-        }
-
-        try {
-            SharedPreferences sharedPreferences = requireContext().getSharedPreferences("ProfilePrefs", Context.MODE_PRIVATE);
-            int usuarioLogadoId = sharedPreferences.getInt("user_id", -1);
-
-            if (usuarioLogadoId == idUsuario) {
-                String nomeUsuario = sharedPreferences.getString("user_name", null);
-                if (nomeUsuario != null && !nomeUsuario.isEmpty()) {
-                    callback.onNomeEncontrado(nomeUsuario);
-                    return;
-                }
-            }
-
-            buscarNomeUsuarioDoFirestore(idUsuario, callback);
-
-        } catch (Exception e) {
-            callback.onErro("Erro ao buscar usuário");
-        }
-    }
-
-    private void buscarNomeUsuarioDoFirestore(Integer idUsuario, UsuarioNomeCallback callback) {
-        if (idUsuario == null) {
-            callback.onErro("ID do usuário é nulo");
-            return;
-        }
-
-        db.collection("trabalhadores")
-                .whereEqualTo("sqlId", idUsuario)
-                .limit(1)
-                .get()
-                .addOnSuccessListener(queryDocumentSnapshots -> {
-                    if (!queryDocumentSnapshots.isEmpty()) {
-                        DocumentSnapshot document = queryDocumentSnapshots.getDocuments().get(0);
-                        String login = document.getString("login");
-                        Long sqlId = document.getLong("sqlId");
-
-                        if (login != null && !login.isEmpty() && sqlId != null && sqlId.equals(idUsuario.longValue())) {
-                            callback.onNomeEncontrado(login);
-                        } else {
-                            callback.onErro("Dados do usuário inconsistentes");
-                        }
-                    } else {
-                        callback.onErro("Usuário não encontrado");
-                    }
-                })
-                .addOnFailureListener(e -> {
-                    callback.onErro("Falha na consulta");
-                });
-    }
-
-    private String calcularTempoDuracao(Date horaInicio, Date horaFim) {
-        if (horaInicio == null || horaFim == null) {
-            return "Tempo não calculável";
-        }
-
-        long diff = horaFim.getTime() - horaInicio.getTime();
-        long diffMinutes = diff / (60 * 1000);
-        long diffHours = diffMinutes / 60;
-        long remainingMinutes = diffMinutes % 60;
-
-        if (diffHours > 0) {
-            return String.format(Locale.getDefault(), "%dh %02dmin", diffHours, remainingMinutes);
-        } else {
-            return String.format(Locale.getDefault(), "%dmin", diffMinutes);
-        }
-    }
-
-    private RegistroParadaResponseDTO converterParaRegistroParadaDTO(Parada parada) {
-        return new RegistroParadaResponseDTO(
-                parada.getId(),
-                parada.getId_maquina(),
-                parada.getId_usuario(),
-                parada.getDes_parada(),
-                parada.getDes_setor(),
-                parada.getDt_parada(),
-                parada.getHora_Fim(),
-                parada.getHora_Inicio()
-        );
     }
 }

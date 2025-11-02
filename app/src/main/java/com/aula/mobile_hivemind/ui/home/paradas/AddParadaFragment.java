@@ -10,11 +10,8 @@ import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.ImageButton;
-import android.widget.TimePicker;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -29,6 +26,7 @@ import com.aula.mobile_hivemind.api.SqlApiService;
 import com.aula.mobile_hivemind.dto.MaquinaResponseDTO;
 import com.aula.mobile_hivemind.dto.RegistroParadaRequestDTO;
 import com.aula.mobile_hivemind.dto.TrabalhadorResponseDTO;
+import com.aula.mobile_hivemind.utils.CustomToast;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
@@ -215,7 +213,7 @@ public class AddParadaFragment extends Fragment {
         String idMaquinaStr = editIdMaquina.getText().toString().trim();
 
         if (idMaquinaStr.isEmpty()) {
-            Toast.makeText(requireContext(), "Digite o ID da máquina", Toast.LENGTH_SHORT).show();
+            CustomToast.showWarning(requireContext(), "Digite o ID da máquina");
             return;
         }
 
@@ -241,9 +239,7 @@ public class AddParadaFragment extends Fragment {
                             if ("regular".equals(userType)) {
                                 if (!validarSetorMaquina(maquinaEncontrada)) {
                                     limparCamposMaquina();
-                                    Toast.makeText(requireContext(),
-                                            "Máquina não encontrada",
-                                            Toast.LENGTH_LONG).show();
+                                    CustomToast.showError(requireContext(), "Máquina não encontrada");
                                     return;
                                 }
                             }
@@ -255,26 +251,26 @@ public class AddParadaFragment extends Fragment {
                             textSetor.setText(setorMaquinaEncontrado);
                             maquinaValida = true;
 
-                            Toast.makeText(requireContext(), "Máquina encontrada", Toast.LENGTH_SHORT).show();
+                            CustomToast.showSuccess(requireContext(), "Máquina encontrada");
                         } else {
                             limparCamposMaquina();
-                            Toast.makeText(requireContext(), "Máquina não encontrada", Toast.LENGTH_SHORT).show();
+                            CustomToast.showError(requireContext(), "Máquina não encontrada");
                         }
                     } else {
                         limparCamposMaquina();
-                        Toast.makeText(requireContext(), "Erro ao buscar máquinas", Toast.LENGTH_SHORT).show();
+                        CustomToast.showError(requireContext(), "Erro ao buscar máquinas");
                     }
                 }
 
                 @Override
                 public void onFailure(Call<List<MaquinaResponseDTO>> call, Throwable t) {
                     limparCamposMaquina();
-                    Toast.makeText(requireContext(), "Erro de conexão: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                    CustomToast.showError(requireContext(), "Erro de conexão: " + t.getMessage());
                 }
             });
 
         } catch (NumberFormatException e) {
-            Toast.makeText(requireContext(), "ID da máquina inválido", Toast.LENGTH_SHORT).show();
+            CustomToast.showError(requireContext(), "ID da máquina inválido");
         }
     }
 
@@ -333,14 +329,12 @@ public class AddParadaFragment extends Fragment {
         }
 
         if (!maquinaValida) {
-            Toast.makeText(requireContext(), "Valide a máquina antes de continuar", Toast.LENGTH_SHORT).show();
+            CustomToast.showWarning(requireContext(), "Valide a máquina antes de continuar");
             return;
         }
 
         if ("regular".equals(userType) && !validarSetorFinal()) {
-            Toast.makeText(requireContext(),
-                    "Erro: A máquina selecionada não pertence ao seu setor.",
-                    Toast.LENGTH_LONG).show();
+            CustomToast.showError(requireContext(), "A máquina selecionada não pertence ao seu setor");
             return;
         }
 
@@ -356,9 +350,9 @@ public class AddParadaFragment extends Fragment {
             enviarParadaParaMongoDB(paradaRequest);
 
         } catch (NumberFormatException e) {
-            Toast.makeText(requireContext(), "IDs devem ser números válidos", Toast.LENGTH_SHORT).show();
+            CustomToast.showError(requireContext(), "IDs devem ser números válidos");
         } catch (Exception e) {
-            Toast.makeText(requireContext(), "Erro: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            CustomToast.showError(requireContext(), "Erro: " + e.getMessage());
         }
     }
 
@@ -376,27 +370,27 @@ public class AddParadaFragment extends Fragment {
 
     private boolean validarCampos() {
         if (editIdMaquina.getText().toString().trim().isEmpty()) {
-            Toast.makeText(requireContext(), "ID da máquina é obrigatório", Toast.LENGTH_SHORT).show();
+            CustomToast.showWarning(requireContext(), "ID da máquina é obrigatório");
             return false;
         }
         if (textSetor.getText().toString().trim().isEmpty()) {
-            Toast.makeText(requireContext(), "Setor é obrigatório", Toast.LENGTH_SHORT).show();
+            CustomToast.showWarning(requireContext(), "Setor é obrigatório");
             return false;
         }
         if (editDescricaoParada.getText().toString().trim().isEmpty()) {
-            Toast.makeText(requireContext(), "Descrição da parada é obrigatória", Toast.LENGTH_SHORT).show();
+            CustomToast.showWarning(requireContext(), "Descrição da parada é obrigatória");
             return false;
         }
         if (editTextDATAPARADA.getText().toString().trim().isEmpty()) {
-            Toast.makeText(requireContext(), "Data da parada é obrigatória", Toast.LENGTH_SHORT).show();
+            CustomToast.showWarning(requireContext(), "Data da parada é obrigatória");
             return false;
         }
         if (editTextHoraInicio.getText().toString().trim().isEmpty()) {
-            Toast.makeText(requireContext(), "Hora de início é obrigatória", Toast.LENGTH_SHORT).show();
+            CustomToast.showWarning(requireContext(), "Hora de início é obrigatória");
             return false;
         }
         if (editTextHoraFim.getText().toString().trim().isEmpty()) {
-            Toast.makeText(requireContext(), "Hora de término é obrigatória", Toast.LENGTH_SHORT).show();
+            CustomToast.showWarning(requireContext(), "Hora de término é obrigatória");
             return false;
         }
 
@@ -409,11 +403,11 @@ public class AddParadaFragment extends Fragment {
             Date fim = timeFormat.parse(horaFim);
 
             if (fim.before(inicio)) {
-                Toast.makeText(requireContext(), "Hora de término deve ser depois da hora de início", Toast.LENGTH_SHORT).show();
+                CustomToast.showWarning(requireContext(), "Hora de término deve ser depois da hora de início");
                 return false;
             }
         } catch (Exception e) {
-            Toast.makeText(requireContext(), "Erro ao validar horários", Toast.LENGTH_SHORT).show();
+            CustomToast.showError(requireContext(), "Erro ao validar horários");
             return false;
         }
 
@@ -455,10 +449,11 @@ public class AddParadaFragment extends Fragment {
 
                 if (response.isSuccessful()) {
                     limparCampos();
+                    CustomToast.showSuccess(requireContext(), "Parada adicionada com sucesso!");
                     NavController navController = Navigation.findNavController(requireActivity(), R.id.nav_host_fragment_activity_main);
                     navController.navigate(R.id.confirmationFragment);
                 } else {
-                    Toast.makeText(requireContext(), "Erro ao salvar parada", Toast.LENGTH_SHORT).show();
+                    CustomToast.showError(requireContext(), "Erro ao salvar parada");
                 }
             }
 
@@ -466,7 +461,7 @@ public class AddParadaFragment extends Fragment {
             public void onFailure(Call<ResponseBody> call, Throwable t) {
                 btnAdicionarParada.setEnabled(true);
                 btnAdicionarParada.setText("Adicionar Parada");
-                Toast.makeText(requireContext(), "Falha na conexão: " + t.getMessage(), Toast.LENGTH_LONG).show();
+                CustomToast.showError(requireContext(), "Falha na conexão: " + t.getMessage());
             }
         });
     }

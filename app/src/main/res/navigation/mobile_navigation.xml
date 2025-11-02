@@ -64,4 +64,9 @@
         android:name="com.aula.mobile_hivemind.notification.NotificationHistoryFragment"
         android:label="Histórico de Notificações"
         tools:layout="@layout/fragment_notification_history" />
+    <fragment
+        android:id="@+id/confirmationMaintenceFragment"
+        android:name="com.aula.mobile_hivemind.ui.home.paradas.ConfirmationMaintenceFragment"
+        android:label="fragment_confirmation_maintence"
+        tools:layout="@layout/fragment_confirmation_maintence" />
 </navigation>

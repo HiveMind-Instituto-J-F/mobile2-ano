@@ -3,7 +3,6 @@ package com.aula.mobile_hivemind.auth;
 import android.Manifest;
 import android.app.AlertDialog;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
@@ -34,6 +33,7 @@ import androidx.navigation.Navigation;
 
 import com.aula.mobile_hivemind.MainActivity;
 import com.aula.mobile_hivemind.R;
+import com.aula.mobile_hivemind.utils.SharedPreferencesManager;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.resource.bitmap.CircleCrop;
 import com.cloudinary.android.MediaManager;
@@ -56,7 +56,6 @@ public class LogoutFragment extends Fragment {
     private static final String TAG = "LogoutFragment";
 
     private static final String PREFS_NAME = "ProfilePrefs";
-    private static final String KEY_USER_EMAIL = "user_email";
     private static final String CLOUD_NAME = "djouiin10";
     private static final String UPLOAD_PRESET = "Main_preset";
 
@@ -71,7 +70,7 @@ public class LogoutFragment extends Fragment {
     private ActivityResultLauncher<Uri> cameraLauncher;
 
     private Uri currentPhotoUri;
-    private SharedPreferences sharedPreferences;
+    private SharedPreferencesManager prefsManager;
     private FirebaseFirestore db;
     private String userEmail;
     private CardView itemInfoHistorico;
@@ -82,7 +81,7 @@ public class LogoutFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        sharedPreferences = requireContext().getSharedPreferences(PREFS_NAME, 0);
+        prefsManager = SharedPreferencesManager.getInstance(requireContext());
         db = FirebaseFirestore.getInstance();
         initializeLaunchers();
 
@@ -100,9 +99,10 @@ public class LogoutFragment extends Fragment {
         btnFechar = view.findViewById(R.id.btnFechar);
         imgPerfil = view.findViewById(R.id.imgFoto);
 
-        userEmail = sharedPreferences.getString(KEY_USER_EMAIL, null);
-        if (userEmail == null) {
+        userEmail = prefsManager.getUserEmail();
+        if (userEmail == null || userEmail.isEmpty()) {
             Toast.makeText(requireContext(), "Erro: usuário não identificado", Toast.LENGTH_SHORT).show();
+            usuarioLogado.setText("Usuário não identificado");
         } else {
             usuarioLogado.setText(userEmail);
         }
@@ -111,8 +111,8 @@ public class LogoutFragment extends Fragment {
 
         carregarSetorUsuario();
 
-        // Obter o tipo de usuário
-        userType = sharedPreferences.getString("user_type", "regular");
+        // Obter o tipo de usuário do SharedPreferencesManager
+        userType = getStringFromSharedPreferences("user_type", "regular");
 
         // Encontrar o item do histórico
         itemInfoHistorico = view.findViewById(R.id.itemInfoHistorico);
@@ -132,10 +132,12 @@ public class LogoutFragment extends Fragment {
         btnFechar.setOnClickListener(v -> fecharTela());
         imgPerfil.setOnClickListener(v -> showImagePickerDialog());
 
-        itemInfoHistorico.setOnClickListener(v -> {
-            NavController navController = Navigation.findNavController(v);
-            navController.navigate(R.id.navigation_historico_diario);
-        });
+        if (itemInfoHistorico != null && !isEngenheiro()) {
+            itemInfoHistorico.setOnClickListener(v -> {
+                NavController navController = Navigation.findNavController(v);
+                navController.navigate(R.id.navigation_historico_diario);
+            });
+        }
 
         return view;
     }
@@ -149,7 +151,7 @@ public class LogoutFragment extends Fragment {
     }
 
     private void carregarSetorUsuario() {
-        String userSetor = sharedPreferences.getString("user_setor", null);
+        String userSetor = getStringFromSharedPreferences("user_setor", null);
         if (userSetor != null && !userSetor.isEmpty()) {
             txtSetorUsuario.setText(userSetor);
         } else {
@@ -174,9 +176,7 @@ public class LogoutFragment extends Fragment {
                         if (setor != null && !setor.isEmpty()) {
                             txtSetorUsuario.setText(setor);
                             // Salvar no SharedPreferences para uso futuro
-                            SharedPreferences.Editor editor = sharedPreferences.edit();
-                            editor.putString("user_setor", setor);
-                            editor.apply();
+                            saveStringToSharedPreferences("user_setor", setor);
                         } else {
                             txtSetorUsuario.setText("Não informado");
                         }
@@ -220,7 +220,10 @@ public class LogoutFragment extends Fragment {
     }
 
     private void loadUserProfileImage() {
-        String cloudinaryUrl = sharedPreferences.getString(getCloudinaryUrlKey(), null);
+        // Para imagens, ainda precisamos usar SharedPreferences direto
+        android.content.SharedPreferences imagePrefs = requireContext().getSharedPreferences(PREFS_NAME, 0);
+
+        String cloudinaryUrl = imagePrefs.getString(getCloudinaryUrlKey(), null);
         if (cloudinaryUrl != null) {
             Glide.with(requireContext())
                     .load(cloudinaryUrl)
@@ -230,7 +233,7 @@ public class LogoutFragment extends Fragment {
             return;
         }
 
-        String encodedImage = sharedPreferences.getString(getProfileImageKey(), null);
+        String encodedImage = imagePrefs.getString(getProfileImageKey(), null);
         if (encodedImage != null) {
             byte[] byteArray = Base64.decode(encodedImage, Base64.DEFAULT);
             Bitmap bitmap = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.length);
@@ -251,19 +254,25 @@ public class LogoutFragment extends Fragment {
         byte[] byteArray = byteArrayOutputStream.toByteArray();
         String encodedImage = Base64.encodeToString(byteArray, Base64.DEFAULT);
 
-        SharedPreferences.Editor editor = sharedPreferences.edit();
+        // Para imagens, ainda precisamos usar SharedPreferences direto
+        android.content.SharedPreferences imagePrefs = requireContext().getSharedPreferences(PREFS_NAME, 0);
+        android.content.SharedPreferences.Editor editor = imagePrefs.edit();
         editor.putString(getProfileImageKey(), encodedImage);
         editor.apply();
     }
 
     private void saveCloudinaryUrl(String imageUrl) {
-        SharedPreferences.Editor editor = sharedPreferences.edit();
+        // Para imagens, ainda precisamos usar SharedPreferences direto
+        android.content.SharedPreferences imagePrefs = requireContext().getSharedPreferences(PREFS_NAME, 0);
+        android.content.SharedPreferences.Editor editor = imagePrefs.edit();
         editor.putString(getCloudinaryUrlKey(), imageUrl);
         editor.apply();
     }
 
     private void removerFotoPerfil() {
-        SharedPreferences.Editor editor = sharedPreferences.edit();
+        // Para imagens, ainda precisamos usar SharedPreferences direto
+        android.content.SharedPreferences imagePrefs = requireContext().getSharedPreferences(PREFS_NAME, 0);
+        android.content.SharedPreferences.Editor editor = imagePrefs.edit();
         editor.remove(getProfileImageKey());
         editor.remove(getCloudinaryUrlKey());
         editor.apply();
@@ -288,8 +297,10 @@ public class LogoutFragment extends Fragment {
         builder.setTitle("Foto de Perfil");
         builder.setMessage("Escolha uma opção para sua foto de perfil");
 
-        boolean usuarioTemFoto = sharedPreferences.contains(getProfileImageKey()) ||
-                sharedPreferences.contains(getCloudinaryUrlKey());
+        // Para imagens, ainda precisamos usar SharedPreferences direto
+        android.content.SharedPreferences imagePrefs = requireContext().getSharedPreferences(PREFS_NAME, 0);
+        boolean usuarioTemFoto = imagePrefs.contains(getProfileImageKey()) ||
+                imagePrefs.contains(getCloudinaryUrlKey());
 
         builder.setPositiveButton("Tirar Foto", (dialog, which) -> openCamera());
         builder.setNegativeButton("Escolher da Galeria", (dialog, which) -> openGallery());
@@ -313,9 +324,8 @@ public class LogoutFragment extends Fragment {
     }
 
     private void fazerLogout() {
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.remove(KEY_USER_EMAIL);
-        editor.apply();
+        // Limpar todos os dados usando o SharedPreferencesManager
+        prefsManager.clear();
 
         Intent intent = new Intent(getActivity(), LoginActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
@@ -485,6 +495,19 @@ public class LogoutFragment extends Fragment {
         }
 
         return Bitmap.createScaledBitmap(bitmap, newWidth, newHeight, true);
+    }
+
+    // Métodos auxiliares para compatibilidade com dados que não estão no SharedPreferencesManager
+    private String getStringFromSharedPreferences(String key, String defaultValue) {
+        android.content.SharedPreferences prefs = requireContext().getSharedPreferences(PREFS_NAME, 0);
+        return prefs.getString(key, defaultValue);
+    }
+
+    private void saveStringToSharedPreferences(String key, String value) {
+        android.content.SharedPreferences prefs = requireContext().getSharedPreferences(PREFS_NAME, 0);
+        android.content.SharedPreferences.Editor editor = prefs.edit();
+        editor.putString(key, value);
+        editor.apply();
     }
 
     @Override

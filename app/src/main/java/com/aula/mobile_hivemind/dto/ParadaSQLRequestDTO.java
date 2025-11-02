@@ -2,12 +2,13 @@ package com.aula.mobile_hivemind.dto;
 
 import com.google.gson.annotations.SerializedName;
 
-import java.text.SimpleDateFormat;
+import java.sql.Time;
 import java.util.Date;
-import java.util.Locale;
-import java.util.TimeZone;
-
 public class ParadaSQLRequestDTO {
+
+    @SerializedName("id_manutencao")
+    private Integer id_manutencao;
+
     @SerializedName("id_maquina")
     private Integer id_maquina;
 
@@ -21,36 +22,35 @@ public class ParadaSQLRequestDTO {
     private String des_setor;
 
     @SerializedName("dt_parada")
-    private String dt_parada;
+    private Date dt_parada;
 
     @SerializedName("hora_inicio")
-    private String hora_Inicio;
+    private Time hora_Inicio;
 
     @SerializedName("hora_fim")
-    private String hora_Fim;
+    private Time hora_Fim;
 
-    public ParadaSQLRequestDTO(RegistroParadaResponseDTO paradaMongo) {
-        this.id_maquina = paradaMongo.getId_maquina();
-        this.id_usuario = paradaMongo.getId_usuario();
-        this.des_parada = paradaMongo.getDes_parada();
-        this.des_setor = paradaMongo.getDes_setor();
+    public ParadaSQLRequestDTO(int idManutencao, int idMaquina, int idUsuario, String descricaoParada,
+                               String setor, Date dataStr, Time horaInicioComSegundos, Time horaFimComSegundos) {
 
-        this.dt_parada = formatarData(paradaMongo.getDt_parada());
-        this.hora_Inicio = formatarHora(paradaMongo.getHora_Inicio());
-        this.hora_Fim = formatarHora(paradaMongo.getHora_Fim());
+        this.id_manutencao = idManutencao;
+        this.id_maquina = idMaquina;
+        this.id_usuario = idUsuario;
+        this.des_parada = descricaoParada;
+        this.des_setor = setor;
+        this.dt_parada = dataStr;
+        this.hora_Inicio = horaInicioComSegundos;
+        this.hora_Fim = horaFimComSegundos;
     }
 
-    private String formatarData(Date dateTime) {
-        if (dateTime == null) return null;
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-        return dateFormat.format(dateTime);
+
+
+    public Integer getId_manutencao() {
+        return id_manutencao;
     }
 
-    private String formatarHora(Date dateTime) {
-        if (dateTime == null) return null;
-        SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss", Locale.getDefault());
-        timeFormat.setTimeZone(TimeZone.getDefault());
-        return timeFormat.format(dateTime);
+    public void setId_manutencao(Integer id_manutencao) {
+        this.id_manutencao = id_manutencao;
     }
 
     public Integer getId_maquina() { return id_maquina; }
@@ -65,12 +65,17 @@ public class ParadaSQLRequestDTO {
     public String getDes_setor() { return des_setor; }
     public void setDes_setor(String des_setor) { this.des_setor = des_setor; }
 
-    public String getDt_parada() { return dt_parada; }
-    public void setDt_parada(String dt_parada) { this.dt_parada = dt_parada; }
+    public Date getDt_parada() {
+        return dt_parada;
+    }
 
-    public String getHora_Inicio() { return hora_Inicio; }
-    public void setHora_Inicio(String hora_Inicio) { this.hora_Inicio = hora_Inicio; }
+    public void setDt_parada(Date dt_parada) {
+        this.dt_parada = dt_parada;
+    }
 
-    public String getHora_Fim() { return hora_Fim; }
-    public void setHora_Fim(String hora_Fim) { this.hora_Fim = hora_Fim; }
+    public Time getHora_Inicio() { return hora_Inicio; }
+    public void setHora_Inicio(Time hora_Inicio) { this.hora_Inicio = hora_Inicio; }
+
+    public Time getHora_Fim() { return hora_Fim; }
+    public void setHora_Fim(Time hora_Fim) { this.hora_Fim = hora_Fim; }
 }

@@ -8,6 +8,7 @@ import android.widget.Toast;
 import androidx.core.app.NotificationManagerCompat;
 
 import com.aula.mobile_hivemind.MainActivity;
+import com.aula.mobile_hivemind.utils.CustomToast;
 
 public class ParadaNotificationReceiver extends BroadcastReceiver {
 
@@ -16,8 +17,7 @@ public class ParadaNotificationReceiver extends BroadcastReceiver {
         String acao = intent.getStringExtra("acao");
 
         if ("visualizar_detalhes".equals(acao)) {
-            // Abrir detalhes da parada no app
-            Toast.makeText(context, "Abrindo detalhes da parada...", Toast.LENGTH_SHORT).show();
+            CustomToast.showInfo(context, "Abrindo detalhes da parada...");
 
             // Intent para abrir a tela de detalhes da parada
             Intent detalhesIntent = new Intent(context, MainActivity.class);
