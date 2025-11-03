@@ -19,7 +19,6 @@ import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -33,6 +32,7 @@ import androidx.navigation.Navigation;
 
 import com.aula.mobile_hivemind.MainActivity;
 import com.aula.mobile_hivemind.R;
+import com.aula.mobile_hivemind.utils.CustomToast;
 import com.aula.mobile_hivemind.utils.SharedPreferencesManager;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.resource.bitmap.CircleCrop;
@@ -106,7 +106,7 @@ public class LogoutFragment extends Fragment {
 
         userEmail = prefsManager.getUserEmail();
         if (userEmail == null || userEmail.isEmpty()) {
-            Toast.makeText(requireContext(), "Erro: usuário não identificado", Toast.LENGTH_SHORT).show();
+            CustomToast.showError(requireContext(), "Erro: usuário não identificado");
             usuarioLogado.setText("Usuário não identificado");
         } else {
             usuarioLogado.setText(userEmail);
@@ -384,7 +384,7 @@ public class LogoutFragment extends Fragment {
         editor.apply();
 
         imgPerfil.setImageResource(R.drawable.img);
-        Toast.makeText(requireContext(), "Foto removida com sucesso", Toast.LENGTH_SHORT).show();
+        CustomToast.showSuccess(requireContext(), "Foto removida com sucesso");
     }
 
     private void mostrarDialogoRemoverFoto() {
@@ -443,12 +443,12 @@ public class LogoutFragment extends Fragment {
         CloudinaryManager.init(requireContext());
 
         if (!CloudinaryManager.isInitialized()) {
-            Toast.makeText(requireContext(), "Cloudinary não configurado", Toast.LENGTH_SHORT).show();
+            CustomToast.showWarning(requireContext(), "Cloudinary não configurado");
             return;
         }
 
         if (userEmail == null) {
-            Toast.makeText(requireContext(), "Usuário não identificado. Faça login novamente.", Toast.LENGTH_SHORT).show();
+            CustomToast.showWarning(requireContext(), "Usuário não identificado. Faça login novamente.");
             return;
         }
 
@@ -475,12 +475,12 @@ public class LogoutFragment extends Fragment {
                                 .transform(new CircleCrop())
                                 .placeholder(R.drawable.img)
                                 .into(imgPerfil);
-                        Toast.makeText(requireContext(), "Imagem salva com sucesso!", Toast.LENGTH_SHORT).show();
+                        CustomToast.showSuccess(requireContext(), "Imagem salva com sucesso!");
                     }
 
                     @Override
                     public void onError(String requestId, ErrorInfo error) {
-                        Toast.makeText(requireContext(), "Erro ao enviar imagem: " + error.getDescription(), Toast.LENGTH_LONG).show();
+                        CustomToast.showError(requireContext(), "Erro ao enviar imagem: " + error.getDescription());
                     }
 
                     @Override
@@ -501,7 +501,7 @@ public class LogoutFragment extends Fragment {
                         }
                     }
                     if (!allGranted) {
-                        Toast.makeText(requireContext(), "Permissões necessárias não concedidas", Toast.LENGTH_SHORT).show();
+                        CustomToast.showWarning(requireContext(), "Permissões necessárias não concedidas");
                     }
                 }
         );
@@ -522,7 +522,7 @@ public class LogoutFragment extends Fragment {
                     if (success && currentPhotoUri != null) {
                         handleSelectedImage(currentPhotoUri);
                     } else {
-                        Toast.makeText(requireContext(), "Foto não foi tirada", Toast.LENGTH_SHORT).show();
+                        CustomToast.showWarning(requireContext(), "Foto não foi tirada");
                     }
                 }
         );
@@ -550,7 +550,7 @@ public class LogoutFragment extends Fragment {
                 cameraLauncher.launch(currentPhotoUri);
             }
         } catch (IOException e) {
-            Toast.makeText(requireContext(), "Erro ao criar arquivo para foto", Toast.LENGTH_SHORT).show();
+            CustomToast.showError(requireContext(), "Erro ao criar arquivo para foto");
         }
     }
 
@@ -580,7 +580,8 @@ public class LogoutFragment extends Fragment {
             uploadToCloudinary(imageUri);
 
         } catch (IOException e) {
-            Toast.makeText(requireContext(), "Erro ao carregar imagem", Toast.LENGTH_SHORT).show();
+
+            CustomToast.showError(requireContext(), "Erro ao carregar imagem");
         }
     }
 
