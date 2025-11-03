@@ -27,6 +27,7 @@ import com.aula.mobile_hivemind.dto.MaquinaResponseDTO;
 import com.aula.mobile_hivemind.dto.RegistroParadaRequestDTO;
 import com.aula.mobile_hivemind.dto.TrabalhadorResponseDTO;
 import com.aula.mobile_hivemind.utils.CustomToast;
+import com.aula.mobile_hivemind.utils.SharedPreferencesManager;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
@@ -128,12 +129,25 @@ public class AddParadaFragment extends Fragment {
 
     private void obterInformacoesUsuario() {
         SharedPreferences sharedPreferences = requireContext().getSharedPreferences("ProfilePrefs", Context.MODE_PRIVATE);
-        userSetor = sharedPreferences.getString("user_setor", null);
-        userType = sharedPreferences.getString("user_type", "regular");
 
-        // Buscar informações completas do usuário se não tiver o ID
-        if (sharedPreferences.getInt("user_id", -1) == -1) {
+        SharedPreferencesManager prefsManager = SharedPreferencesManager.getInstance(requireContext());
+
+        int userTypeInt = prefsManager.getUserType();
+
+        userType = convertUserTypeToString(userTypeInt);
+
+        userSetor = sharedPreferences.getString("user_setor", null);
+
+        if (prefsManager.getUserId() == -1) {
             buscarInformacoesCompletasUsuario();
+        }
+    }
+
+    private String convertUserTypeToString(int userType) {
+        switch (userType) {
+            case 1: return "regular";
+            case 2: return "man";
+            default: return "regular";
         }
     }
 
@@ -357,8 +371,8 @@ public class AddParadaFragment extends Fragment {
     }
 
     private int getUserIdLogado() {
-        SharedPreferences sharedPreferences = requireContext().getSharedPreferences("ProfilePrefs", Context.MODE_PRIVATE);
-        return sharedPreferences.getInt("user_id", -1);
+        SharedPreferencesManager prefsManager = SharedPreferencesManager.getInstance(requireContext());
+        return prefsManager.getUserId();
     }
 
     private boolean validarSetorFinal() {

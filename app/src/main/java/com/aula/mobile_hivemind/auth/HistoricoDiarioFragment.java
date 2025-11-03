@@ -123,8 +123,6 @@ public class HistoricoDiarioFragment extends Fragment {
                 return "regular";
             case 2:
                 return "man";
-            case 3:
-                return "RH";
             default:
                 return "regular";
         }

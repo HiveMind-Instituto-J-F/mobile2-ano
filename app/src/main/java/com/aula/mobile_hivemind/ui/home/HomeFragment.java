@@ -254,7 +254,7 @@ public class HomeFragment extends Fragment {
                                 switch (tipoPerfilOriginal.toLowerCase()) {
                                     case "operador": userType = "regular"; break;
                                     case "engenheiro": userType = "man"; break;
-                                    case "supervisor": userType = "RH"; break;
+                                    case "supervisor": userType = "man"; break;
                                     default: userType = "regular";
                                 }
                             }

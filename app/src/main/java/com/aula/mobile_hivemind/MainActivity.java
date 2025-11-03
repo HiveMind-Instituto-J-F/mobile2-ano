@@ -99,7 +99,6 @@ public class MainActivity extends AppCompatActivity {
     private void controlFabVisibility(int destinationId) {
         int[] showFabDestinations = {
                 R.id.navigation_home,
-                R.id.navigation_homerh
         };
 
         boolean shouldShowFab = false;
@@ -235,8 +234,6 @@ public class MainActivity extends AppCompatActivity {
                 return "regular";
             case TIPO_USUARIO_MANUTENCAO:
                 return "man";
-            case TIPO_USUARIO_ADMIN:
-                return "RH";
             default:
                 return "regular";
         }

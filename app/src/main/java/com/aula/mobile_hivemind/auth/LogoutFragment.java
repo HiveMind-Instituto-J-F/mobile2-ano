@@ -17,7 +17,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageButton;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -191,10 +190,6 @@ public class LogoutFragment extends Fragment {
             case "manutencao":
             case "mop":
                 return TIPO_USUARIO_MANUTENCAO;
-            case "rh":
-            case "3":
-            case "admin":
-                return TIPO_USUARIO_ADMIN;
             default:
                 return TIPO_USUARIO_COMUM;
         }

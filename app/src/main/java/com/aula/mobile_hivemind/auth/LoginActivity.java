@@ -97,7 +97,7 @@ public class LoginActivity extends AppCompatActivity {
             case "engenheiro":
                 return 2; // TIPO_USUARIO_MANUTENCAO
             case "supervisor":
-                return 3; // TIPO_USUARIO_ADMIN
+                return 2;
             default:
                 return 1; // TIPO_USUARIO_COMUM
         }
