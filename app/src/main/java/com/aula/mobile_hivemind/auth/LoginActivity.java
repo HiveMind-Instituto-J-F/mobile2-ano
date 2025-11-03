@@ -52,6 +52,8 @@ public class LoginActivity extends AppCompatActivity {
                         DocumentSnapshot document = task.getResult().getDocuments().get(0);
                         String senhaFirestore = document.getString("senha");
                         String tipoPerfil = document.getString("tipo_perfil");
+                        // ✅ OBTER O SETOR DO DOCUMENTO
+                        String userSetor = document.getString("setor");
 
                         // OBTER ID DO DOCUMENTO DO FIRESTORE
                         String documentId = document.getId();
@@ -67,7 +69,14 @@ public class LoginActivity extends AppCompatActivity {
                             prefs.setUserId(userId);
                             prefs.setLoggedIn(true);
 
-                            Log.d("Login", "Dados salvos - Email: " + email + ", Tipo: " + userType + ", ID: " + userId);
+                            // ✅ SALVAR O SETOR NO SHAREDPREFERENCES ANTIGO (para compatibilidade)
+                            getSharedPreferences("ProfilePrefs", MODE_PRIVATE)
+                                    .edit()
+                                    .putString("user_setor", userSetor)
+                                    .apply();
+
+                            Log.d("Login", "Dados salvos - Email: " + email + ", Tipo: " + userType +
+                                    ", ID: " + userId + ", Setor: " + userSetor);
 
                             Intent intent = new Intent(LoginActivity.this, MainActivity.class);
                             intent.putExtra("USER_TYPE", userType);
