@@ -190,8 +190,10 @@ public class MainActivity extends AppCompatActivity {
         fabMain.setOnClickListener(v -> {
             switch (userType) {
                 case TIPO_USUARIO_COMUM: // OPERADOR
-                case TIPO_USUARIO_MANUTENCAO: // ENGENHEIRO
                     navController.navigate(R.id.addParadaFragment);
+                    break;
+                case TIPO_USUARIO_MANUTENCAO: // ENGENHEIRO
+                    navController.navigate(R.id.maintenanceFragment);
                     break;
 
                 default:

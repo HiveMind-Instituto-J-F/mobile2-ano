@@ -59,6 +59,11 @@ public class LogoutFragment extends Fragment {
     private static final String CLOUD_NAME = "djouiin10";
     private static final String UPLOAD_PRESET = "Main_preset";
 
+    // Constantes para tipos de usuário (deve ser igual ao MainActivity)
+    private static final int TIPO_USUARIO_COMUM = 1;
+    private static final int TIPO_USUARIO_MANUTENCAO = 2;
+    private static final int TIPO_USUARIO_ADMIN = 3;
+
     private TextView usuarioLogado;
     private TextView txtSetorUsuario;
     private Button btnSair;
@@ -74,7 +79,7 @@ public class LogoutFragment extends Fragment {
     private FirebaseFirestore db;
     private String userEmail;
     private CardView itemInfoHistorico;
-    private String userType;
+    private int userType;
 
     public LogoutFragment() {}
 
@@ -111,8 +116,11 @@ public class LogoutFragment extends Fragment {
 
         carregarSetorUsuario();
 
-        // Obter o tipo de usuário do SharedPreferencesManager
-        userType = getStringFromSharedPreferences("user_type", "regular");
+        // CORREÇÃO: Método robusto para obter o tipo de usuário
+        userType = getUserTypeSafe();
+
+        // Debug para verificar o tipo de usuário
+        logUserType();
 
         // Encontrar o item do histórico
         itemInfoHistorico = view.findViewById(R.id.itemInfoHistorico);
@@ -132,14 +140,78 @@ public class LogoutFragment extends Fragment {
         btnFechar.setOnClickListener(v -> fecharTela());
         imgPerfil.setOnClickListener(v -> showImagePickerDialog());
 
-        if (itemInfoHistorico != null && !isEngenheiro()) {
-            itemInfoHistorico.setOnClickListener(v -> {
-                NavController navController = Navigation.findNavController(v);
-                navController.navigate(R.id.navigation_historico_diario);
-            });
+        return view;
+    }
+
+    /**
+     * Método seguro para obter o tipo de usuário, lidando com conflitos de tipo
+     */
+    private int getUserTypeSafe() {
+        android.content.SharedPreferences prefs = requireContext().getSharedPreferences(PREFS_NAME, 0);
+
+        try {
+            // Primeiro tenta obter como Integer (formato correto)
+            if (prefs.contains("user_type")) {
+                Object value = prefs.getAll().get("user_type");
+
+                if (value instanceof Integer) {
+                    return (Integer) value;
+                } else if (value instanceof String) {
+                    // Se for String, converte para int
+                    String stringValue = (String) value;
+                    try {
+                        return Integer.parseInt(stringValue);
+                    } catch (NumberFormatException e) {
+                        // Se não for número, converte baseado no texto
+                        return convertStringUserTypeToInt(stringValue);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Erro ao ler user_type: " + e.getMessage());
         }
 
-        return view;
+        // Fallback: tenta obter do SharedPreferencesManager ou usa padrão
+        return getDefaultUserType();
+    }
+
+    /**
+     * Converte string para int baseado nos valores conhecidos
+     */
+    private int convertStringUserTypeToInt(String userTypeString) {
+        if (userTypeString == null) return TIPO_USUARIO_COMUM;
+
+        switch (userTypeString.toLowerCase()) {
+            case "regular":
+            case "1":
+            case "comum":
+                return TIPO_USUARIO_COMUM;
+            case "man":
+            case "2":
+            case "manutencao":
+            case "mop":
+                return TIPO_USUARIO_MANUTENCAO;
+            case "rh":
+            case "3":
+            case "admin":
+                return TIPO_USUARIO_ADMIN;
+            default:
+                return TIPO_USUARIO_COMUM;
+        }
+    }
+
+    /**
+     * Obtém o tipo de usuário padrão como fallback
+     */
+    private int getDefaultUserType() {
+        // Tenta obter do SharedPreferencesManager
+        int userTypeFromManager = prefsManager.getUserType();
+        if (userTypeFromManager != -1) {
+            return userTypeFromManager;
+        }
+
+        // Fallback final
+        return TIPO_USUARIO_COMUM;
     }
 
     @Override
@@ -151,12 +223,15 @@ public class LogoutFragment extends Fragment {
     }
 
     private void carregarSetorUsuario() {
-        String userSetor = getStringFromSharedPreferences("user_setor", null);
-        if (userSetor != null && !userSetor.isEmpty()) {
-            txtSetorUsuario.setText(userSetor);
+        // Buscar sempre do Firestore para garantir dados atualizados
+        String cachedSetor = getStringFromSharedPreferences("user_setor", null);
+        if (cachedSetor != null && !cachedSetor.isEmpty()) {
+            txtSetorUsuario.setText(cachedSetor);
         } else {
-            buscarSetorDoFirestore();
+            txtSetorUsuario.setText("Carregando...");
         }
+
+        buscarSetorDoFirestore();
     }
 
     private void buscarSetorDoFirestore() {
@@ -174,23 +249,52 @@ public class LogoutFragment extends Fragment {
                         DocumentSnapshot document = task.getResult().getDocuments().get(0);
                         String setor = document.getString("setor");
                         if (setor != null && !setor.isEmpty()) {
+                            // SEMPRE atualizar a UI com o valor do Firestore
                             txtSetorUsuario.setText(setor);
-                            // Salvar no SharedPreferences para uso futuro
+                            // E atualizar o cache no SharedPreferences
                             saveStringToSharedPreferences("user_setor", setor);
                         } else {
                             txtSetorUsuario.setText("Não informado");
                         }
                     } else {
-                        txtSetorUsuario.setText("Não informado");
+                        // Se falhar, manter o cached ou mostrar erro
+                        String cachedSetor = getStringFromSharedPreferences("user_setor", null);
+                        if (cachedSetor == null) {
+                            txtSetorUsuario.setText("Não informado");
+                        }
                     }
                 })
                 .addOnFailureListener(e -> {
-                    txtSetorUsuario.setText("Não informado");
+                    // Em caso de erro, manter o cached se existir
+                    String cachedSetor = getStringFromSharedPreferences("user_setor", null);
+                    if (cachedSetor == null) {
+                        txtSetorUsuario.setText("Erro ao carregar");
+                    }
                 });
     }
 
     private boolean isEngenheiro() {
-        return "MOP".equals(userType);
+        return userType == TIPO_USUARIO_MANUTENCAO;
+    }
+
+    // Método para debug
+    private void logUserType() {
+        String typeName;
+        switch (userType) {
+            case TIPO_USUARIO_COMUM:
+                typeName = "OPERADOR (COMUM)";
+                break;
+            case TIPO_USUARIO_MANUTENCAO:
+                typeName = "ENGENHEIRO (MANUTENÇÃO)";
+                break;
+            case TIPO_USUARIO_ADMIN:
+                typeName = "ADMIN (RH)";
+                break;
+            default:
+                typeName = "DESCONHECIDO: " + userType;
+                break;
+        }
+        Log.d("LogoutFragment", "Tipo de usuário: " + userType + " - " + typeName);
     }
 
     private void configurarVisibilidadeHistorico() {
@@ -198,9 +302,11 @@ public class LogoutFragment extends Fragment {
             if (isEngenheiro()) {
                 // Engenheiro: esconder completamente o item do histórico
                 itemInfoHistorico.setVisibility(View.GONE);
+                Log.d("LogoutFragment", "Engenheiro - Histórico oculto");
             } else {
-                // Operador: mostrar o item do histórico
+                // Operador ou Admin: mostrar o item do histórico
                 itemInfoHistorico.setVisibility(View.VISIBLE);
+                Log.d("LogoutFragment", "Operador/Admin - Histórico visível");
             }
         }
     }
